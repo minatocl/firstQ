@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="robots" content="noindex">
+<title>みなとクリニック 問診票 / Medical Questionnaire</title>
+<style>
+:root{
+  --teal:#2286A5;
+  --teal-dark:#0B4A61;
+  --teal-soft:#D9EEF5;
+  --bg-top:#F4FBFE;
+  --bg-bottom:#E2F1F8;
+  --ink:#1A3A46;
+  --mint:#2BB59A;
+  --card:#FFFFFF;
+  --line:#C5E0EB;
+  --radius:18px;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue","Hiragino Kaku Gothic ProN","Noto Sans JP","Noto Sans Thai","Noto Sans SC",sans-serif;
+  background:linear-gradient(180deg,var(--bg-top) 0%,var(--bg-bottom) 100%);
+  min-height:100vh;color:var(--ink);
+  font-size:16px;line-height:1.6;
+}
+.wrap{max-width:560px;margin:0 auto;padding:20px 18px 60px}
+header{text-align:center;padding:26px 0 6px}
+header img{width:min(300px,78%);height:auto}
+.wave{display:block;width:100%;height:26px;margin:4px 0 14px}
+.tagline{color:var(--teal);font-size:13px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;text-align:center;margin-bottom:18px}
+
+/* screens */
+.screen{display:none;animation:fadein .35s ease}
+.screen.active{display:block}
+@keyframes fadein{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* language select */
+.lang-title{text-align:center;font-size:18px;font-weight:700;color:var(--teal-dark);margin-bottom:20px}
+.lang-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.lang-btn{
+  background:var(--card);border:2px solid var(--line);border-radius:var(--radius);
+  padding:20px 10px;font-size:17px;font-weight:700;color:var(--teal-dark);
+  cursor:pointer;transition:.15s;text-align:center;font-family:inherit;
+}
+.lang-btn small{display:block;font-size:11px;font-weight:500;color:var(--teal);margin-top:3px}
+.lang-btn:active{transform:scale(.97);border-color:var(--teal);background:var(--teal-soft)}
+
+/* form */
+.section{background:var(--card);border-radius:var(--radius);padding:20px 18px;margin-bottom:16px;box-shadow:0 2px 10px rgba(34,134,165,.07)}
+.sec-head{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.sec-num{
+  flex:none;width:30px;height:30px;border-radius:50%;background:var(--teal);color:#fff;
+  font-weight:800;font-size:15px;display:flex;align-items:center;justify-content:center;
+  font-style:italic;
+}
+.sec-title{font-size:16px;font-weight:800;color:var(--teal-dark)}
+.hint{font-size:12.5px;color:#5B7E8C;margin:-8px 0 12px 40px}
+.chips{display:flex;flex-wrap:wrap;gap:9px}
+.chip{position:relative}
+.chip input{position:absolute;opacity:0;width:100%;height:100%;left:0;top:0;cursor:pointer}
+.chip span{
+  display:inline-block;padding:9px 15px;border-radius:999px;border:1.5px solid var(--line);
+  background:#F7FCFE;font-size:14.5px;font-weight:600;color:var(--ink);transition:.12s;user-select:none;
+}
+.chip input:checked + span{background:var(--teal);border-color:var(--teal);color:#fff}
+.chip input:focus-visible + span{outline:3px solid rgba(34,134,165,.4);outline-offset:2px}
+textarea,input[type=text],input[type=date],input[type=number]{
+  width:100%;border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;
+  font-size:16px;font-family:inherit;background:#F7FCFE;color:var(--ink);margin-top:10px;
+}
+textarea:focus,input:focus{outline:none;border-color:var(--teal);background:#fff}
+textarea{resize:vertical;min-height:70px}
+label.field-label{display:block;font-size:13px;font-weight:700;color:var(--teal);margin-top:12px}
+.submit-btn{
+  width:100%;padding:17px;border:none;border-radius:var(--radius);
+  background:linear-gradient(135deg,var(--teal) 0%,#1A6E8A 100%);color:#fff;
+  font-size:17px;font-weight:800;cursor:pointer;font-family:inherit;
+  box-shadow:0 4px 14px rgba(34,134,165,.35);transition:.15s;letter-spacing:.03em;
+}
+.submit-btn:active{transform:scale(.98)}
+.submit-btn:disabled{opacity:.5}
+.back-link{display:block;text-align:center;margin-top:16px;color:var(--teal);font-size:14px;font-weight:600;background:none;border:none;cursor:pointer;font-family:inherit;width:100%}
+
+/* done screen */
+.done-card{background:var(--card);border-radius:var(--radius);padding:34px 22px;text-align:center;box-shadow:0 2px 10px rgba(34,134,165,.07)}
+.done-check{width:58px;height:58px;border-radius:50%;background:var(--mint);color:#fff;font-size:30px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
+.done-title{font-size:19px;font-weight:800;color:var(--teal-dark);margin-bottom:8px}
+.done-sub{font-size:14.5px;color:#4A6B78;margin-bottom:22px}
+.code-box{
+  background:var(--teal-soft);border:2px dashed var(--teal);border-radius:16px;padding:18px;
+}
+.code-label{font-size:12.5px;font-weight:700;color:var(--teal);letter-spacing:.1em}
+.code-num{font-size:52px;font-weight:900;color:var(--teal-dark);font-style:italic;letter-spacing:.08em;line-height:1.2}
+.err{background:#FDECEC;border:1.5px solid #E8A0A0;color:#9B3535;border-radius:12px;padding:12px 14px;font-size:14px;margin-bottom:14px;display:none}
+.spinner{display:inline-block;width:18px;height:18px;border:3px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:-4px;margin-right:8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ===== animations ===== */
+.form-head{text-align:center;margin-bottom:20px;animation:rise .45s ease backwards}
+.form-title{font-size:27px;font-weight:900;font-style:italic;color:var(--teal-dark);letter-spacing:.04em}
+.form-purpose{font-size:13.5px;color:#4A6B78;margin-top:7px;max-width:420px;margin-left:auto;margin-right:auto}
+.wave-g{animation:drift 8s linear infinite}
+.wave-g2{animation:drift 13s linear infinite reverse}
+@keyframes drift{from{transform:translateX(0)}to{transform:translateX(-200px)}}
+@keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+#scr-form.active .section{animation:rise .5s ease backwards;animation-delay:calc(var(--i,0)*70ms)}
+#scr-lang.active .lang-btn{animation:rise .45s ease backwards}
+#scr-lang.active .lang-btn:nth-child(1){animation-delay:.02s}
+#scr-lang.active .lang-btn:nth-child(2){animation-delay:.08s}
+#scr-lang.active .lang-btn:nth-child(3){animation-delay:.14s}
+#scr-lang.active .lang-btn:nth-child(4){animation-delay:.2s}
+#scr-lang.active .lang-btn:nth-child(5){animation-delay:.26s}
+#scr-lang.active .lang-btn:nth-child(6){animation-delay:.32s}
+.chip input:checked + span{animation:pop .28s ease}
+@keyframes pop{0%{transform:scale(.9)}55%{transform:scale(1.08)}100%{transform:scale(1)}}
+.done-check{animation:pop-in .55s cubic-bezier(.68,-.55,.27,1.55) backwards}
+@keyframes pop-in{from{transform:scale(0)}to{transform:scale(1)}}
+.code-box{animation:rise .5s .25s ease backwards}
+.submit-btn{position:relative;overflow:hidden}
+.submit-btn::after{content:"";position:absolute;top:0;left:-80%;width:50%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.35),transparent);animation:shine 3.2s ease-in-out infinite}
+@keyframes shine{0%,60%{left:-80%}100%{left:130%}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <img src="data:image/png;base64,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" alt="みなとクリニック">
+  </header>
+  <svg class="wave" viewBox="0 0 400 26" preserveAspectRatio="none" aria-hidden="true">
+    <g class="wave-g"><path d="M0 16 Q 50 4 100 16 T 200 16 T 300 16 T 400 16 T 500 16 T 600 16" fill="none" stroke="#2286A5" stroke-width="2.5" stroke-linecap="round" opacity=".55"/></g>
+    <g class="wave-g2"><path d="M-200 22 Q -150 10 -100 22 T 0 22 T 100 22 T 200 22 T 300 22 T 400 22 T 500 22 T 600 22" fill="none" stroke="#7FC3D8" stroke-width="2" stroke-linecap="round" opacity=".45"/></g>
+  </svg>
+
+  <!-- STEP 1: language -->
+  <div class="screen active" id="scr-lang">
+    <p class="lang-title">言語を選んでください<br><span style="font-size:14px;font-weight:600;color:#4A6B78">Please select your language</span></p>
+    <div class="lang-grid">
+      <button class="lang-btn" data-lang="ja">日本語</button>
+      <button class="lang-btn" data-lang="en">English</button>
+      <button class="lang-btn" data-lang="zh">中文<small>简体</small></button>
+      <button class="lang-btn" data-lang="pt">Português</button>
+      <button class="lang-btn" data-lang="th">ไทย</button>
+      <button class="lang-btn" data-lang="es">Español</button>
+    </div>
+  </div>
+
+  <!-- STEP 2: form -->
+  <div class="screen" id="scr-form">
+    <div class="form-head">
+      <h1 class="form-title" data-t="formTag"></h1>
+      <p class="form-purpose" data-t="formPurpose"></p>
+    </div>
+    <div class="err" id="form-err"></div>
+
+    <div class="section" style="--i:1">
+      <div class="sec-head"><div class="sec-num">1</div><div class="sec-title" data-t="q1"></div></div>
+      <p class="hint" data-t="q1hint"></p>
+      <div class="chips" id="symptom-chips"></div>
+      <label class="field-label" data-t="q1free"></label>
+      <textarea id="reason-free" data-ph="q1ph"></textarea>
+    </div>
+
+    <div class="section" style="--i:2">
+      <div class="sec-head"><div class="sec-num">2</div><div class="sec-title" data-t="q2"></div></div>
+      <textarea id="address" data-ph="q2ph"></textarea>
+    </div>
+
+    <div class="section" style="--i:3">
+      <div class="sec-head"><div class="sec-num">3</div><div class="sec-title" data-t="qPhone"></div></div>
+      <input type="text" id="phone" inputmode="tel" autocomplete="tel" data-ph="qPhonePh">
+    </div>
+
+    <div class="section" style="--i:4">
+      <div class="sec-head"><div class="sec-num">4</div><div class="sec-title" data-t="q3"></div></div>
+      <input type="date" id="dob" max="2026-12-31">
+    </div>
+
+    <div class="section" id="weight-section" style="display:none;--i:1">
+      <div class="sec-head"><div class="sec-num">4+</div><div class="sec-title" data-t="qw"></div></div>
+      <input type="number" id="weight" inputmode="decimal" step="0.1" min="1" max="150" data-ph="qwph">
+    </div>
+
+    <div class="section" style="--i:5">
+      <div class="sec-head"><div class="sec-num">5</div><div class="sec-title" data-t="q4"></div></div>
+      <div class="chips" id="history-chips"></div>
+      <label class="field-label" data-t="other"></label>
+      <input type="text" id="history-free">
+    </div>
+
+    <div class="section" style="--i:6">
+      <div class="sec-head"><div class="sec-num">6</div><div class="sec-title" data-t="q5"></div></div>
+      <div class="chips" id="allergy-chips"></div>
+      <label class="field-label" data-t="q5detail"></label>
+      <input type="text" id="allergy-free" data-ph="q5ph">
+    </div>
+
+    <button class="submit-btn" id="btn-submit"><span data-t="send"></span></button>
+    <button class="back-link" id="btn-back" data-t="back"></button>
+  </div>
+
+  <!-- STEP 3: done -->
+  <div class="screen" id="scr-done">
+    <div class="done-card">
+      <div class="done-check">✓</div>
+      <p class="done-title" data-t="doneTitle"></p>
+      <p class="done-sub" data-t="doneSub"></p>
+      <div class="code-box">
+        <div class="code-label" data-t="codeLabel"></div>
+        <div class="code-num" id="done-code"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================= CONFIG ================= */
+const WORKER_URL = "https://minato-monshin.minato-monshin.workers.dev"; // ← Cloudflare WorkerのURLに変更
+/* ========================================== */
+
+/* Master keys: stored as keys, reception panel renders Japanese labels */
+const SYMPTOMS = ["fever","cough","sorethroat","runnynose","headache","stomachache","diarrhea","nausea","skin","injury","vaccine","checkup"];
+const HISTORY  = ["none","hypertension","diabetes","asthma","heart","stroke","cancer","liver","kidney"];
+const ALLERGY  = ["none","drug","food","otherallergy"];
+
+const I18N = {
+ja:{formTag:"問診票",q1:"今日はどうされましたか?",q1hint:"あてはまるものをすべて選んでください",q1free:"詳しく(いつから、など)",q1ph:"例:3日前から",q2:"ご住所",formPurpose:"診察をスムーズに進めるため、症状やアレルギーを事前にお伺いします。所要時間は約2分です。",qPhone:"電話番号",qPhonePh:"090-1234-5678",q2ph:"例:横浜市中区…",q3:"生年月日",qw:"お子さまの体重",qwph:"kg",q4:"今までにかかった病気(既往歴)",q5:"アレルギー",q5detail:"内容(薬品名・食品名など)",q5ph:"例:ペニシリン",other:"その他",send:"送信する",back:"← 言語選択にもどる",doneTitle:"送信しました",doneSub:"ご入力ありがとうございました。受付に「問診票を送信しました」とお声がけのうえ、この画面の番号をお見せください。",codeLabel:"受付コード",errNet:"送信できませんでした。電波の良い場所でもう一度お試しください。",errReq:"「受診理由」「生年月日」を入力してください。",
+sym:{fever:"発熱",cough:"咳",sorethroat:"のどの痛み",runnynose:"鼻水",headache:"頭痛",stomachache:"腹痛",diarrhea:"下痢",nausea:"吐き気・嘔吐",skin:"皮膚の症状",injury:"けが",vaccine:"予防接種",checkup:"健診・検査"},
+his:{none:"なし",hypertension:"高血圧",diabetes:"糖尿病",asthma:"喘息",heart:"心臓病",stroke:"脳卒中",cancer:"がん",liver:"肝臓病",kidney:"腎臓病"},
+alg:{none:"なし",drug:"薬",food:"食物",otherallergy:"その他"}},
+en:{formTag:"Medical Questionnaire",q1:"What brings you in today?",q1hint:"Select all that apply",q1free:"Details (since when, etc.)",q1ph:"e.g. since 3 days ago",q2:"Address in Japan",formPurpose:"To make your visit smoother, please tell us about your symptoms and allergies in advance. Takes about 2 minutes.",qPhone:"Phone number",qPhonePh:"090-1234-5678",q2ph:"e.g. Naka-ku, Yokohama...",q3:"Date of birth",qw:"Child's weight",qwph:"kg",q4:"Past medical history",q5:"Allergies",q5detail:"Details (drug / food name)",q5ph:"e.g. penicillin",other:"Other",send:"Send",back:"← Back to language selection",doneTitle:"Sent!",doneSub:"Thank you! Please tell the reception desk \"I sent the questionnaire\" and show them this number.",codeLabel:"RECEPTION CODE",errNet:"Could not send. Please try again with a better connection.",errReq:"Please fill in the reason for your visit and date of birth.",
+sym:{fever:"Fever",cough:"Cough",sorethroat:"Sore throat",runnynose:"Runny nose",headache:"Headache",stomachache:"Stomach ache",diarrhea:"Diarrhea",nausea:"Nausea / vomiting",skin:"Skin problem",injury:"Injury",vaccine:"Vaccination",checkup:"Check-up / test"},
+his:{none:"None",hypertension:"High blood pressure",diabetes:"Diabetes",asthma:"Asthma",heart:"Heart disease",stroke:"Stroke",cancer:"Cancer",liver:"Liver disease",kidney:"Kidney disease"},
+alg:{none:"None",drug:"Medication",food:"Food",otherallergy:"Other"}},
+zh:{formTag:"问诊表",q1:"今天有什么不舒服?",q1hint:"请选择所有符合的项目",q1free:"详细情况(从什么时候开始等)",q1ph:"例:3天前开始",q2:"在日住址",formPurpose:"为使就诊更顺利,请提前告知您的症状和过敏情况。约需2分钟。",qPhone:"电话号码",qPhonePh:"090-1234-5678",q2ph:"例:横滨市中区…",q3:"出生日期",qw:"孩子的体重",qwph:"kg",q4:"既往病史",q5:"过敏",q5detail:"具体内容(药品名/食品名)",q5ph:"例:青霉素",other:"其他",send:"发送",back:"← 返回语言选择",doneTitle:"已发送",doneSub:"感谢您的填写。请告知前台\"问诊表已发送\",并出示此号码。",codeLabel:"受理号码",errNet:"发送失败。请在信号良好的地方重试。",errReq:"请填写就诊原因和出生日期。",
+sym:{fever:"发烧",cough:"咳嗽",sorethroat:"喉咙痛",runnynose:"流鼻涕",headache:"头痛",stomachache:"腹痛",diarrhea:"腹泻",nausea:"恶心/呕吐",skin:"皮肤症状",injury:"外伤",vaccine:"疫苗接种",checkup:"体检/检查"},
+his:{none:"无",hypertension:"高血压",diabetes:"糖尿病",asthma:"哮喘",heart:"心脏病",stroke:"脑卒中",cancer:"癌症",liver:"肝病",kidney:"肾病"},
+alg:{none:"无",drug:"药物",food:"食物",otherallergy:"其他"}},
+pt:{formTag:"Questionário Médico",q1:"O que o traz aqui hoje?",q1hint:"Selecione todas as opções aplicáveis",q1free:"Detalhes (desde quando, etc.)",q1ph:"ex.: desde 3 dias atrás",q2:"Endereço no Japão",formPurpose:"Para agilizar sua consulta, informe seus sintomas e alergias com antecedência. Leva cerca de 2 minutos.",qPhone:"Telefone",qPhonePh:"090-1234-5678",q2ph:"ex.: Naka-ku, Yokohama...",q3:"Data de nascimento",qw:"Peso da criança",qwph:"kg",q4:"Histórico médico",q5:"Alergias",q5detail:"Detalhes (nome do remédio / alimento)",q5ph:"ex.: penicilina",other:"Outro",send:"Enviar",back:"← Voltar à seleção de idioma",doneTitle:"Enviado!",doneSub:"Obrigado! Avise a recepção que enviou o questionário e mostre este número.",codeLabel:"CÓDIGO DE RECEPÇÃO",errNet:"Não foi possível enviar. Tente novamente com melhor conexão.",errReq:"Preencha o motivo da consulta e a data de nascimento.",
+sym:{fever:"Febre",cough:"Tosse",sorethroat:"Dor de garganta",runnynose:"Coriza",headache:"Dor de cabeça",stomachache:"Dor de estômago",diarrhea:"Diarreia",nausea:"Náusea / vômito",skin:"Problema de pele",injury:"Ferimento",vaccine:"Vacinação",checkup:"Exame / check-up"},
+his:{none:"Nenhum",hypertension:"Pressão alta",diabetes:"Diabetes",asthma:"Asma",heart:"Doença cardíaca",stroke:"AVC",cancer:"Câncer",liver:"Doença hepática",kidney:"Doença renal"},
+alg:{none:"Nenhuma",drug:"Medicamento",food:"Alimento",otherallergy:"Outra"}},
+th:{formTag:"แบบสอบถามทางการแพทย์",q1:"วันนี้มาด้วยอาการอะไร?",q1hint:"เลือกได้มากกว่าหนึ่งข้อ",q1free:"รายละเอียด (เริ่มเมื่อไหร่ ฯลฯ)",q1ph:"เช่น เริ่มเมื่อ 3 วันก่อน",q2:"ที่อยู่ในญี่ปุ่น",formPurpose:"เพื่อให้การตรวจรวดเร็วขึ้น กรุณาแจ้งอาการและการแพ้ล่วงหน้า ใช้เวลาประมาณ 2 นาที",qPhone:"เบอร์โทรศัพท์",qPhonePh:"090-1234-5678",q2ph:"เช่น Naka-ku, Yokohama...",q3:"วันเดือนปีเกิด",qw:"น้ำหนักของเด็ก",qwph:"กก.",q4:"ประวัติการเจ็บป่วย",q5:"การแพ้",q5detail:"รายละเอียด (ชื่อยา / อาหาร)",q5ph:"เช่น เพนิซิลลิน",other:"อื่นๆ",send:"ส่ง",back:"← กลับไปเลือกภาษา",doneTitle:"ส่งแล้ว!",doneSub:"ขอบคุณค่ะ/ครับ กรุณาแจ้งแผนกต้อนรับว่า \"ส่งแบบสอบถามแล้ว\" และแสดงหมายเลขนี้",codeLabel:"รหัสรับบริการ",errNet:"ส่งไม่สำเร็จ กรุณาลองใหม่ในที่ที่สัญญาณดี",errReq:"กรุณากรอกเหตุผลที่มาพบแพทย์และวันเกิด",
+sym:{fever:"ไข้",cough:"ไอ",sorethroat:"เจ็บคอ",runnynose:"น้ำมูกไหล",headache:"ปวดหัว",stomachache:"ปวดท้อง",diarrhea:"ท้องเสีย",nausea:"คลื่นไส้/อาเจียน",skin:"อาการทางผิวหนัง",injury:"บาดเจ็บ",vaccine:"ฉีดวัคซีน",checkup:"ตรวจสุขภาพ"},
+his:{none:"ไม่มี",hypertension:"ความดันสูง",diabetes:"เบาหวาน",asthma:"หอบหืด",heart:"โรคหัวใจ",stroke:"หลอดเลือดสมอง",cancer:"มะเร็ง",liver:"โรคตับ",kidney:"โรคไต"},
+alg:{none:"ไม่มี",drug:"ยา",food:"อาหาร",otherallergy:"อื่นๆ"}},
+es:{formTag:"Cuestionario Médico",q1:"¿Qué le trae hoy a la clínica?",q1hint:"Seleccione todas las opciones que correspondan",q1free:"Detalles (desde cuándo, etc.)",q1ph:"ej.: desde hace 3 días",q2:"Dirección en Japón",formPurpose:"Para agilizar su consulta, indíquenos sus síntomas y alergias con antelación. Toma unos 2 minutos.",qPhone:"Teléfono",qPhonePh:"090-1234-5678",q2ph:"ej.: Naka-ku, Yokohama...",q3:"Fecha de nacimiento",qw:"Peso del niño/a",qwph:"kg",q4:"Antecedentes médicos",q5:"Alergias",q5detail:"Detalles (nombre del medicamento / alimento)",q5ph:"ej.: penicilina",other:"Otro",send:"Enviar",back:"← Volver a la selección de idioma",doneTitle:"¡Enviado!",doneSub:"¡Gracias! Avise en recepción que envió el cuestionario y muestre este número.",codeLabel:"CÓDIGO DE RECEPCIÓN",errNet:"No se pudo enviar. Inténtelo de nuevo con mejor conexión.",errReq:"Complete el motivo de la visita y la fecha de nacimiento.",
+sym:{fever:"Fiebre",cough:"Tos",sorethroat:"Dolor de garganta",runnynose:"Congestión nasal",headache:"Dolor de cabeza",stomachache:"Dolor de estómago",diarrhea:"Diarrea",nausea:"Náuseas / vómitos",skin:"Problema de piel",injury:"Lesión",vaccine:"Vacunación",checkup:"Chequeo / examen"},
+his:{none:"Ninguno",hypertension:"Hipertensión",diabetes:"Diabetes",asthma:"Asma",heart:"Enfermedad cardíaca",stroke:"Derrame cerebral",cancer:"Cáncer",liver:"Enfermedad hepática",kidney:"Enfermedad renal"},
+alg:{none:"Ninguna",drug:"Medicamento",food:"Alimento",otherallergy:"Otra"}}
+};
+
+let LANG = "ja";
+const $ = id => document.getElementById(id);
+const t = k => I18N[LANG][k] || k;
+
+function show(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  $(id).classList.add("active");
+  window.scrollTo({top:0});
+}
+
+function buildChips(containerId, keys, dict, group, exclusiveKey){
+  const c = $(containerId); c.innerHTML = "";
+  keys.forEach(k=>{
+    const l = document.createElement("label"); l.className="chip";
+    const i = document.createElement("input"); i.type="checkbox"; i.value=k; i.name=group;
+    const s = document.createElement("span"); s.textContent = I18N[LANG][dict][k];
+    i.addEventListener("change",()=>{
+      if(!exclusiveKey) return;
+      const boxes=[...document.querySelectorAll(`input[name=${group}]`)];
+      if(i.value===exclusiveKey && i.checked) boxes.forEach(b=>{if(b!==i)b.checked=false;});
+      else if(i.checked) boxes.find(b=>b.value===exclusiveKey).checked=false;
+    });
+    l.append(i,s); c.append(l);
+  });
+}
+
+function renderForm(){
+  document.querySelectorAll("[data-t]").forEach(el=>el.textContent=t(el.dataset.t));
+  document.querySelectorAll("[data-ph]").forEach(el=>el.placeholder=t(el.dataset.ph));
+  buildChips("symptom-chips",SYMPTOMS,"sym","sym");
+  buildChips("history-chips",HISTORY,"his","his","none");
+  buildChips("allergy-chips",ALLERGY,"alg","alg","none");
+}
+
+document.querySelectorAll(".lang-btn").forEach(b=>b.addEventListener("click",()=>{
+  LANG=b.dataset.lang; renderForm(); show("scr-form");
+}));
+$("btn-back").addEventListener("click",()=>show("scr-lang"));
+
+/* show weight field if under 16 (child) */
+$("dob").addEventListener("change",()=>{
+  const v=$("dob").value; if(!v) return;
+  const age=(Date.now()-new Date(v).getTime())/(365.25*24*3600*1000);
+  $("weight-section").style.display = age<16 ? "block" : "none";
+});
+
+function checked(group){return [...document.querySelectorAll(`input[name=${group}]:checked`)].map(i=>i.value);}
+
+$("btn-submit").addEventListener("click", async ()=>{
+  const err=$("form-err"); err.style.display="none";
+  const sym=checked("sym"), reasonFree=$("reason-free").value.trim();
+  const dob=$("dob").value;
+  if((sym.length===0 && !reasonFree) || !dob){
+    err.textContent=t("errReq"); err.style.display="block"; window.scrollTo({top:0,behavior:"smooth"}); return;
+  }
+  const payload={
+    lang:LANG, createdAt:new Date().toISOString(),
+    symptoms:sym, reasonFree,
+    address:$("address").value.trim(),
+    phone:$("phone").value.trim(),
+    dob,
+    weight:$("weight-section").style.display!=="none" ? $("weight").value.trim() : "",
+    history:checked("his"), historyFree:$("history-free").value.trim(),
+    allergy:checked("alg"), allergyFree:$("allergy-free").value.trim()
+  };
+  const btn=$("btn-submit"); btn.disabled=true;
+  btn.innerHTML='<span class="spinner"></span>'+t("send");
+  try{
+    const r=await fetch(WORKER_URL+"/submit",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+    if(!r.ok) throw new Error();
+    const d=await r.json();
+    $("done-code").textContent=d.code;
+    show("scr-done");
+  }catch(e){
+    err.textContent=t("errNet"); err.style.display="block"; window.scrollTo({top:0,behavior:"smooth"});
+  }finally{
+    btn.disabled=false; btn.innerHTML='<span data-t="send">'+t("send")+'</span>';
+  }
+});
+</script>
+</body>
+</html>
