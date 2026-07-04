@@ -63,6 +63,25 @@ input:focus{outline:none;border-color:var(--teal)}
 .btn-wallet{display:block;width:100%;background:var(--navy);color:#fff;border:none;border-radius:14px;padding:17px;font-size:16px;font-weight:800;font-family:inherit;cursor:pointer;text-align:center}
 .btn-wallet:active{transform:scale(.98)}
 .ok-hint{text-align:center;font-size:12.5px;color:#7A93A0;margin-top:16px;line-height:1.7}
+
+/* 次回の使い方(アニメ付き) */
+.use-guide{margin-top:24px;background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:20px 18px 22px;text-align:center;box-shadow:0 2px 14px rgba(38,32,85,.07)}
+.use-illo{width:100%;max-width:280px;height:auto;margin:0 auto 10px;display:block}
+.use-eyebrow{font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--teal)}
+.use-title{font-size:19px;font-weight:800;color:var(--navy);margin:4px 0 8px;text-wrap:balance;line-height:1.35}
+.use-step{font-size:14.5px;color:#3F5B66;line-height:1.75}
+@keyframes scanmove{0%{transform:translateY(0)}100%{transform:translateY(50px)}}
+@keyframes beampulse{0%,100%{opacity:.14}50%{opacity:.55}}
+@keyframes phonebob{0%{transform:translateX(0)}100%{transform:translateX(8px)}}
+@keyframes beep{0%,62%{opacity:0;transform:scale(.5)}78%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.15)}}
+.an-phone{animation:phonebob 2s ease-in-out infinite alternate}
+.an-scan{animation:scanmove 1.7s ease-in-out infinite alternate}
+.an-beam{animation:beampulse 1.7s ease-in-out infinite}
+.an-beep{transform-box:fill-box;transform-origin:center;animation:beep 1.7s ease-in-out infinite}
+@media (prefers-reduced-motion: reduce){
+  .an-phone,.an-scan,.an-beam,.an-beep{animation:none}
+  .an-beep{opacity:1}
+}
 </style>
 </head>
 <body>
@@ -122,7 +141,50 @@ input:focus{outline:none;border-color:var(--teal)}
       <p class="ok-title" data-t="successTitle"></p>
       <p class="ok-msg" id="done-msg"></p>
       <button class="btn-wallet" id="btn-add" data-t="addBtn"></button>
-      <p class="ok-hint" data-t="addHint"></p>
+
+      <div class="use-guide">
+        <svg class="use-illo" viewBox="0 0 280 168" role="img" aria-labelledby="illo-title">
+          <title id="illo-title">スマートフォンのQRを受付のスキャナにかざす様子</title>
+          <!-- スキャナからのビーム -->
+          <polygon class="an-beam" points="188,80 188,102 126,88" fill="#9FE1CB"/>
+          <!-- スマートフォン -->
+          <g class="an-phone">
+            <rect x="44" y="20" width="92" height="128" rx="16" fill="#262055"/>
+            <rect x="60" y="27" width="18" height="4" rx="2" fill="#453F7A"/>
+            <rect x="52" y="38" width="76" height="96" rx="7" fill="#ffffff"/>
+            <g fill="#1A1440">
+              <!-- ファインダー(3隅) -->
+              <rect x="60" y="46" width="15" height="15"/><rect x="63" y="49" width="9" height="9" fill="#fff"/><rect x="65.5" y="51.5" width="4" height="4"/>
+              <rect x="105" y="46" width="15" height="15"/><rect x="108" y="49" width="9" height="9" fill="#fff"/><rect x="110.5" y="51.5" width="4" height="4"/>
+              <rect x="60" y="91" width="15" height="15"/><rect x="63" y="94" width="9" height="9" fill="#fff"/><rect x="65.5" y="96.5" width="4" height="4"/>
+              <!-- データモジュール -->
+              <rect x="82" y="48" width="4" height="4"/><rect x="90" y="48" width="4" height="4"/><rect x="97" y="52" width="4" height="4"/>
+              <rect x="82" y="56" width="4" height="4"/><rect x="89" y="60" width="4" height="4"/><rect x="97" y="60" width="4" height="4"/>
+              <rect x="82" y="72" width="4" height="4"/><rect x="90" y="72" width="4" height="4"/><rect x="98" y="72" width="4" height="4"/><rect x="106" y="72" width="4" height="4"/><rect x="114" y="72" width="4" height="4"/>
+              <rect x="82" y="80" width="4" height="4"/><rect x="98" y="80" width="4" height="4"/><rect x="113" y="80" width="4" height="4"/>
+              <rect x="82" y="92" width="4" height="4"/><rect x="90" y="97" width="4" height="4"/><rect x="98" y="92" width="4" height="4"/><rect x="108" y="97" width="4" height="4"/><rect x="114" y="90" width="4" height="4"/>
+              <rect x="89" y="105" width="4" height="4"/><rect x="101" y="105" width="4" height="4"/><rect x="112" y="104" width="4" height="4"/>
+            </g>
+            <!-- 走査ライン -->
+            <rect class="an-scan" x="58" y="46" width="64" height="4" rx="2" fill="#2BB59A" opacity="0.85"/>
+          </g>
+          <!-- 受付スキャナ -->
+          <g>
+            <rect x="184" y="122" width="74" height="10" rx="4" fill="#CBC8E0"/>
+            <rect x="200" y="60" width="44" height="62" rx="12" fill="#33305C"/>
+            <rect x="188" y="76" width="12" height="30" rx="3" fill="#FF5A6E"/>
+            <circle cx="222" cy="72" r="3" fill="#9FE1CB"/>
+          </g>
+          <!-- 読み取り成功マーク -->
+          <g class="an-beep">
+            <circle cx="222" cy="42" r="12" fill="#2BB59A"/>
+            <path d="M216 42 l4.5 4.5 l8 -8.5" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </g>
+        </svg>
+        <div class="use-eyebrow" id="use-eyebrow"></div>
+        <p class="use-title" id="use-title"></p>
+        <p class="use-step" id="use-step"></p>
+      </div>
     </div>
 
   </div>
@@ -156,6 +218,17 @@ const DOB_LABELS = {
 };
 const dlab = k => (DOB_LABELS[LANG] || DOB_LABELS.ja)[k];
 
+/* 「次回の使い方」案内(成功画面) */
+const USE_GUIDE = {
+  ja:{eyebrow:"次回の受診から", title:"受付でこれをかざすだけ", step:"Apple Wallet を開いて診察券を表示し、QRを受付のスキャナにかざしてください。"},
+  en:{eyebrow:"From your next visit", title:"Just hold this to the scanner", step:"At reception, open Apple Wallet, show the card, and hold its QR to the scanner."},
+  zh:{eyebrow:"下次就诊起", title:"在前台对准扫描即可", step:"打开 Apple Wallet 显示诊察券,将二维码对准前台的扫描仪。"},
+  pt:{eyebrow:"Na próxima visita", title:"Basta aproximar do leitor", step:"Na recepção, abra a Apple Wallet, mostre o cartão e aproxime o QR do leitor."},
+  es:{eyebrow:"Desde su próxima visita", title:"Solo acérquela al escáner", step:"En recepción, abra Apple Wallet, muestre el carné y acerque el QR al escáner."},
+  th:{eyebrow:"ตั้งแต่ครั้งหน้า", title:"แค่นำไปทาบเครื่องสแกน", step:"ที่แผนกต้อนรับ เปิด Apple Wallet แสดงบัตร แล้วนำ QR ทาบเครื่องสแกน"}
+};
+const uguide = () => USE_GUIDE[LANG] || USE_GUIDE.ja;
+
 function fillDobSelects(){
   const y=$("dob-y"),m=$("dob-m"),d=$("dob-d");
   const yPrev=y.value,mPrev=m.value,dPrev=d.value;
@@ -177,6 +250,10 @@ function applyI18n(){
   document.documentElement.lang = LANG;
   document.querySelectorAll("[data-t]").forEach(el=>{ el.textContent = t(el.dataset.t); });
   $("done-msg").textContent = t("successMsg");
+  const ug = uguide();
+  $("use-eyebrow").textContent = ug.eyebrow;
+  $("use-title").textContent = ug.title;
+  $("use-step").textContent = ug.step;
   fillDobSelects();
 }
 function show(id){
