@@ -63,7 +63,7 @@ export const BACK_FIELDS = [
   {
     key: "notice",
     label: "ご案内",
-    value: "保険証・マイナンバーカードを毎回ご提示ください",
+    value: "マイナンバーカード(または資格確認書)を毎回ご提示ください",
   },
 ] as const;
 

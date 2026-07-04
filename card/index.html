@@ -70,6 +70,7 @@ input:focus{outline:none;border-color:var(--teal)}
 .use-eyebrow{font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--teal)}
 .use-title{font-size:19px;font-weight:800;color:var(--navy);margin:4px 0 8px;text-wrap:balance;line-height:1.35}
 .use-step{font-size:14.5px;color:#3F5B66;line-height:1.75}
+.use-note{margin-top:14px;background:var(--teal-soft);color:var(--teal-dark);border-radius:12px;padding:11px 14px;font-size:13px;font-weight:700;line-height:1.65;text-align:left}
 @keyframes scanmove{0%{transform:translateY(0)}100%{transform:translateY(50px)}}
 @keyframes beampulse{0%,100%{opacity:.14}50%{opacity:.55}}
 @keyframes phonebob{0%{transform:translateX(0)}100%{transform:translateX(8px)}}
@@ -184,6 +185,7 @@ input:focus{outline:none;border-color:var(--teal)}
         <div class="use-eyebrow" id="use-eyebrow"></div>
         <p class="use-title" id="use-title"></p>
         <p class="use-step" id="use-step"></p>
+        <p class="use-note" id="use-note"></p>
       </div>
     </div>
 
@@ -220,12 +222,12 @@ const dlab = k => (DOB_LABELS[LANG] || DOB_LABELS.ja)[k];
 
 /* 「次回の使い方」案内(成功画面) */
 const USE_GUIDE = {
-  ja:{eyebrow:"次回の受診から", title:"受付でこれをかざすだけ", step:"Apple Wallet を開いて診察券を表示し、QRを受付のスキャナにかざしてください。"},
-  en:{eyebrow:"From your next visit", title:"Just hold this to the scanner", step:"At reception, open Apple Wallet, show the card, and hold its QR to the scanner."},
-  zh:{eyebrow:"下次就诊起", title:"在前台对准扫描即可", step:"打开 Apple Wallet 显示诊察券,将二维码对准前台的扫描仪。"},
-  pt:{eyebrow:"Na próxima visita", title:"Basta aproximar do leitor", step:"Na recepção, abra a Apple Wallet, mostre o cartão e aproxime o QR do leitor."},
-  es:{eyebrow:"Desde su próxima visita", title:"Solo acérquela al escáner", step:"En recepción, abra Apple Wallet, muestre el carné y acerque el QR al escáner."},
-  th:{eyebrow:"ตั้งแต่ครั้งหน้า", title:"แค่นำไปทาบเครื่องสแกน", step:"ที่แผนกต้อนรับ เปิด Apple Wallet แสดงบัตร แล้วนำ QR ทาบเครื่องสแกน"}
+  ja:{eyebrow:"次回の受診から", title:"受付でこのQRをかざします", step:"Apple Wallet を開いて診察券を表示し、QRを受付のスキャナにかざしてください。", note:"マイナンバーカード(または資格確認書)も、毎回あわせてご提示ください。"},
+  en:{eyebrow:"From your next visit", title:"Show this QR at reception", step:"Open Apple Wallet, show the card, and hold its QR to the reception scanner.", note:"Please also present your My Number card (or Certificate of Eligibility) each visit."},
+  zh:{eyebrow:"下次就诊起", title:"在前台出示此二维码", step:"打开 Apple Wallet 显示诊察券,将二维码对准前台的扫描仪。", note:"每次就诊请一并出示 My Number 卡(或资格确认书)。"},
+  pt:{eyebrow:"Na próxima visita", title:"Mostre este QR na recepção", step:"Abra a Apple Wallet, mostre o cartão e aproxime o QR do leitor da recepção.", note:"Apresente também o cartão My Number (ou Certificado de Qualificação) a cada visita."},
+  es:{eyebrow:"Desde su próxima visita", title:"Muestre este QR en recepción", step:"Abra Apple Wallet, muestre el carné y acerque el QR al escáner de recepción.", note:"Presente también su tarjeta My Number (o Certificado de Habilitación) en cada visita."},
+  th:{eyebrow:"ตั้งแต่ครั้งหน้า", title:"แสดง QR นี้ที่แผนกต้อนรับ", step:"เปิด Apple Wallet แสดงบัตร แล้วนำ QR ทาบเครื่องสแกนที่แผนกต้อนรับ", note:"กรุณาแสดงบัตร My Number (หรือใบรับรองสิทธิ) ทุกครั้งด้วย"}
 };
 const uguide = () => USE_GUIDE[LANG] || USE_GUIDE.ja;
 
@@ -254,6 +256,7 @@ function applyI18n(){
   $("use-eyebrow").textContent = ug.eyebrow;
   $("use-title").textContent = ug.title;
   $("use-step").textContent = ug.step;
+  $("use-note").textContent = ug.note;
   fillDobSelects();
 }
 function show(id){
