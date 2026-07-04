@@ -37,8 +37,11 @@ body{
 
 .section{background:var(--card);border-radius:var(--radius);padding:20px 18px;margin-bottom:16px;box-shadow:0 2px 10px rgba(34,134,165,.07)}
 label.f{display:block;font-size:14px;font-weight:800;color:var(--teal-dark);margin-bottom:8px}
-input[type=tel],input[type=date]{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:14px;font-size:16px;font-family:inherit;color:var(--ink);background:#fff}
+input[type=tel]{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:14px;font-size:16px;font-family:inherit;color:var(--ink);background:#fff}
 input:focus{outline:none;border-color:var(--teal)}
+.dob-row{display:flex;gap:8px}
+.dob-row select{flex:1;border:1.5px solid var(--line);border-radius:12px;padding:14px 8px;font-size:16px;font-family:inherit;background:#F7FCFE;color:var(--ink);-webkit-appearance:none;appearance:none;text-align:center}
+.dob-row select:focus{outline:none;border-color:var(--teal);background:#fff}
 .gap{margin-bottom:18px}
 .btn{display:block;width:100%;border:none;border-radius:14px;padding:16px;font-size:16px;font-weight:800;font-family:inherit;cursor:pointer;transition:.12s}
 .btn:active{transform:scale(.98)}
@@ -94,7 +97,11 @@ input:focus{outline:none;border-color:var(--teal)}
         </div>
         <div>
           <label class="f" data-t="dob"></label>
-          <input type="date" id="dob" min="1900-01-01">
+          <div class="dob-row">
+            <select id="dob-y" aria-label="year"></select>
+            <select id="dob-m" aria-label="month"></select>
+            <select id="dob-d" aria-label="day"></select>
+          </div>
         </div>
       </div>
       <button class="btn btn-primary" id="btn-verify"><span data-t="verify"></span></button>
@@ -141,10 +148,36 @@ let LANG = "ja";
 const $ = id => document.getElementById(id);
 const t = k => (I18N[LANG] && I18N[LANG][k]) || I18N.ja[k] || k;
 
+/* 生年月日は問診票と同じ 年/月/日 ドロップダウン方式(カレンダーで遡る手間を回避) */
+const DOB_LABELS = {
+  ja:{yy:"年",mm:"月",dd:"日"}, en:{yy:"Year",mm:"Month",dd:"Day"},
+  zh:{yy:"年",mm:"月",dd:"日"}, pt:{yy:"Ano",mm:"Mês",dd:"Dia"},
+  es:{yy:"Año",mm:"Mes",dd:"Día"}, th:{yy:"ปี",mm:"เดือน",dd:"วัน"}
+};
+const dlab = k => (DOB_LABELS[LANG] || DOB_LABELS.ja)[k];
+
+function fillDobSelects(){
+  const y=$("dob-y"),m=$("dob-m"),d=$("dob-d");
+  const yPrev=y.value,mPrev=m.value,dPrev=d.value;
+  const mk=(sel,label)=>{sel.innerHTML="";const o=document.createElement("option");o.value="";o.textContent=label;o.disabled=true;o.selected=true;sel.append(o);};
+  mk(y,dlab("yy"));mk(m,dlab("mm"));mk(d,dlab("dd"));
+  const now=new Date().getFullYear();
+  for(let i=now;i>=now-110;i--){const o=document.createElement("option");o.value=i;o.textContent=i;y.append(o);}
+  for(let i=1;i<=12;i++){const o=document.createElement("option");o.value=String(i).padStart(2,"0");o.textContent=i;m.append(o);}
+  for(let i=1;i<=31;i++){const o=document.createElement("option");o.value=String(i).padStart(2,"0");o.textContent=i;d.append(o);}
+  if(yPrev)y.value=yPrev; if(mPrev)m.value=mPrev; if(dPrev)d.value=dPrev;
+}
+function getDob(){
+  const y=$("dob-y").value,m=$("dob-m").value,d=$("dob-d").value;
+  if(!y||!m||!d) return "";
+  return `${y}-${m}-${d}`;
+}
+
 function applyI18n(){
   document.documentElement.lang = LANG;
   document.querySelectorAll("[data-t]").forEach(el=>{ el.textContent = t(el.dataset.t); });
   $("done-msg").textContent = t("successMsg");
+  fillDobSelects();
 }
 function show(id){
   document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
@@ -180,7 +213,7 @@ function goWallet(token){
 }
 
 async function doVerify(extra){
-  const phone=$("phone").value.trim(), dob=$("dob").value.trim();
+  const phone=$("phone").value.trim(), dob=getDob();
   if(!phone || !dob){ showErr(t("errReq")); return; }
   const btn=$("btn-verify"); btn.disabled=true; btn.innerHTML='<span class="spinner"></span>'+t("verify");
   try{
