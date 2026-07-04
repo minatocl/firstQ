@@ -1,0 +1,49 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "minato-card",
+  "main": "src/index.ts",
+  "compatibility_date": "2024-09-23",
+  // node-forge / fflate が Node ビルトイン(crypto, stream 等)を参照するため必須
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true
+  },
+
+  // --- 公開しても問題ない設定値(Secret ではない) ---
+  "vars": {
+    // Apple Developer から取得した実値に差し替える。ダミー動作中は例のままでよい。
+    "PASS_TYPE_IDENTIFIER": "pass.com.minato6633.card",
+    "TEAM_IDENTIFIER": "TEAMID0000",
+    "ORG_NAME": "みなとクリニック",
+    // 発行レコードの有効期間(時間)。仕様: 72時間
+    "CARD_TTL_HOURS": "72",
+    // ダウンロードトークンの有効期間(分)。仕様: 10分
+    "TOKEN_TTL_MINUTES": "10",
+    // 照合レート制限: 試行回数/時
+    "RATE_LIMIT_PER_HOUR": "5",
+    // CORS 許可オリジン(カンマ区切り)。GitHub Pages と受付端末の想定。
+    "ALLOWED_ORIGINS": "https://minatocl.github.io"
+  },
+
+  // --- KV: カード発行レコード / トークン / レート制限 ---
+  // デプロイ前に `wrangler kv namespace create CARD_KV` で作成し id を差し替える。
+  // ローカル(wrangler dev)では id はダミーのままでよい(Miniflare がローカル KV を使う)。
+  "kv_namespaces": [
+    {
+      "binding": "CARD_KV",
+      "id": "c64f676192a64ac3ab9093819fbfbdb6",
+      "preview_id": "68d5a32340b94b15bceea18cdf8c5092"
+    }
+  ]
+
+  // --- Secret(コードにも wrangler.jsonc にも書かない) ---
+  // ローカル: worker/.dev.vars に記載(gitignore 済み)
+  // 本番   : `wrangler secret put <NAME>` で登録
+  //   PASS_CERT_PEM        … Pass Type ID 証明書 (PEM)
+  //   PASS_KEY_PEM         … 上記に対応する秘密鍵 (PEM)
+  //   PASS_KEY_PASSPHRASE  … 秘密鍵のパスフレーズ(無ければ空)
+  //   WWDR_CERT_PEM        … Apple WWDR 中間証明書 (PEM)
+  //   TOKEN_SECRET         … ダウンロードトークン用 HMAC 秘密鍵(ランダム長文字列)
+  //   ADMIN_PASSCODE       … 発行 API 用パスコード(admin.html と共通)
+  //   DUMMY_SIGNING        … "1" のときダミー自己署名で pkpass を生成(実証明書が無い間)
+}

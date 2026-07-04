@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="robots" content="noindex">
+<title>デジタル診察券 | みなとクリニック</title>
+<style>
+:root{
+  --teal:#2286A5;--teal-dark:#0B4A61;--teal-soft:#D9EEF5;
+  --navy:#262055;--mint:#9FE1CB;
+  --bg-top:#F4FBFE;--bg-bottom:#E2F1F8;
+  --ink:#1A3A46;--card:#FFFFFF;--line:#C5E0EB;--radius:18px;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue","Hiragino Kaku Gothic ProN","Noto Sans JP","Noto Sans Thai","Noto Sans SC",sans-serif;
+  background:linear-gradient(180deg,var(--bg-top) 0%,var(--bg-bottom) 100%);
+  min-height:100vh;color:var(--ink);font-size:16px;line-height:1.6;
+}
+.wrap{max-width:520px;margin:0 auto;padding:0 18px 60px}
+.hero{background:var(--navy);border-radius:0 0 24px 24px;padding:30px 20px 26px;text-align:center;box-shadow:0 4px 18px rgba(38,32,85,.18)}
+.hero img{width:min(220px,64%);height:auto}
+.hero .sub{color:var(--mint);font-size:12px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;margin-top:12px}
+.h1{text-align:center;font-size:20px;font-weight:800;color:var(--navy);margin:24px 0 6px}
+.lead{text-align:center;font-size:13.5px;color:#4A6B78;margin-bottom:22px}
+
+.screen{display:none;animation:fadein .35s ease}
+.screen.active{display:block}
+@keyframes fadein{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+.lang-title{text-align:center;font-size:17px;font-weight:700;color:var(--teal-dark);margin:26px 0 18px}
+.lang-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.lang-btn{background:var(--card);border:2px solid var(--line);border-radius:var(--radius);padding:20px 10px;font-size:17px;font-weight:700;color:var(--teal-dark);cursor:pointer;transition:.15s;text-align:center;font-family:inherit}
+.lang-btn small{display:block;font-size:11px;font-weight:500;color:var(--teal);margin-top:3px}
+.lang-btn:active{transform:scale(.97);border-color:var(--teal);background:var(--teal-soft)}
+
+.section{background:var(--card);border-radius:var(--radius);padding:20px 18px;margin-bottom:16px;box-shadow:0 2px 10px rgba(34,134,165,.07)}
+label.f{display:block;font-size:14px;font-weight:800;color:var(--teal-dark);margin-bottom:8px}
+input[type=tel],input[type=date]{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:14px;font-size:16px;font-family:inherit;color:var(--ink);background:#fff}
+input:focus{outline:none;border-color:var(--teal)}
+.gap{margin-bottom:18px}
+.btn{display:block;width:100%;border:none;border-radius:14px;padding:16px;font-size:16px;font-weight:800;font-family:inherit;cursor:pointer;transition:.12s}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:var(--teal);color:#fff}
+.btn-primary:disabled{opacity:.6}
+.btn-back{background:none;border:none;color:var(--teal);font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;display:block;margin:16px auto 0;padding:8px}
+.err{background:#FDECEC;color:#B03A3A;border-radius:12px;padding:12px 14px;font-size:13.5px;font-weight:600;margin-bottom:16px;display:none}
+.spinner{display:inline-block;width:15px;height:15px;border:2.5px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:-2px;margin-right:8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* candidate select */
+.cand{width:100%;text-align:left;background:var(--card);border:2px solid var(--line);border-radius:14px;padding:16px;font-size:16px;font-weight:700;color:var(--teal-dark);cursor:pointer;margin-bottom:10px;font-family:inherit}
+.cand:active{border-color:var(--teal);background:var(--teal-soft)}
+
+/* success */
+.ok-badge{width:64px;height:64px;border-radius:50%;background:var(--mint);display:flex;align-items:center;justify-content:center;margin:6px auto 14px;font-size:34px;color:var(--navy)}
+.ok-title{text-align:center;font-size:19px;font-weight:800;color:var(--navy);margin-bottom:8px}
+.ok-msg{text-align:center;font-size:14px;color:#4A6B78;margin-bottom:22px}
+.btn-wallet{display:block;width:100%;background:var(--navy);color:#fff;border:none;border-radius:14px;padding:17px;font-size:16px;font-weight:800;font-family:inherit;cursor:pointer;text-align:center}
+.btn-wallet:active{transform:scale(.98)}
+.ok-hint{text-align:center;font-size:12.5px;color:#7A93A0;margin-top:16px;line-height:1.7}
+</style>
+</head>
+<body>
+  <div class="hero">
+    <img src="../pass-logo/logo@2x.png" alt="みなとクリニック">
+    <div class="sub" id="hero-sub">Digital Patient Card</div>
+  </div>
+  <div class="wrap">
+
+    <!-- STEP 1: language -->
+    <div class="screen active" id="scr-lang">
+      <p class="lang-title">言語を選んでください<br><span style="font-size:13px;font-weight:600;color:#4A6B78">Please select your language</span></p>
+      <div class="lang-grid">
+        <button class="lang-btn" data-lang="ja">日本語</button>
+        <button class="lang-btn" data-lang="en">English</button>
+        <button class="lang-btn" data-lang="zh">中文<small>简体</small></button>
+        <button class="lang-btn" data-lang="pt">Português</button>
+        <button class="lang-btn" data-lang="th">ไทย</button>
+        <button class="lang-btn" data-lang="es">Español</button>
+      </div>
+    </div>
+
+    <!-- STEP 2: verify form -->
+    <div class="screen" id="scr-form">
+      <h1 class="h1" data-t="pageTitle"></h1>
+      <p class="lead" data-t="intro"></p>
+      <div class="err" id="form-err"></div>
+      <div class="section">
+        <div class="gap">
+          <label class="f" data-t="phone"></label>
+          <input type="tel" id="phone" inputmode="tel" autocomplete="tel">
+        </div>
+        <div>
+          <label class="f" data-t="dob"></label>
+          <input type="date" id="dob" min="1900-01-01">
+        </div>
+      </div>
+      <button class="btn btn-primary" id="btn-verify"><span data-t="verify"></span></button>
+      <button class="btn-back" id="btn-back" data-t="back"></button>
+    </div>
+
+    <!-- STEP 3: candidate select -->
+    <div class="screen" id="scr-select">
+      <h1 class="h1" data-t="pageTitle"></h1>
+      <p class="lead" data-t="selectTitle"></p>
+      <div id="cand-list"></div>
+      <button class="btn-back" id="btn-back2" data-t="back"></button>
+    </div>
+
+    <!-- STEP 4: success -->
+    <div class="screen" id="scr-done">
+      <div class="ok-badge">✓</div>
+      <p class="ok-title" data-t="successTitle"></p>
+      <p class="ok-msg" id="done-msg"></p>
+      <button class="btn-wallet" id="btn-add" data-t="addBtn"></button>
+      <p class="ok-hint" data-t="addHint"></p>
+    </div>
+
+  </div>
+
+<script>
+/* ================= CONFIG ================= */
+/* デプロイ時に新 Worker(minato-card)の URL に差し替える。
+   動作確認用に ?api=http://127.0.0.1:8787 で上書き可能。 */
+const CARD_API = new URLSearchParams(location.search).get("api")
+  || "https://minato-card.minato-monshin.workers.dev";
+/* ========================================== */
+
+const I18N = {
+  ja:{pageTitle:"デジタル診察券",intro:"電話番号と生年月日で本人確認し、Apple Wallet に診察券を追加します。",phone:"電話番号",dob:"生年月日",verify:"確認する",back:"← 言語選択にもどる",selectTitle:"複数の方が見つかりました。ご本人をお選びください。",successTitle:"本人確認ができました",successMsg:"下のボタンから Apple Wallet に追加してください。",addBtn:"Apple Wallet に追加",addHint:"追加後、再来院時は受付のスキャナに診察券のQRをかざしてください。",errReq:"電話番号と生年月日をご入力ください。",errNomatch:"一致する情報が見つかりませんでした。受付でご確認ください。",errExpired:"有効期限が切れています。受付で再発行をお申し付けください。",errRate:"試行回数が上限に達しました。しばらくしてからお試しください。",errNet:"通信に失敗しました。電波の良い場所でもう一度お試しください。"},
+  en:{pageTitle:"Digital Patient Card",intro:"Verify your identity with your phone number and date of birth to add your card to Apple Wallet.",phone:"Phone number",dob:"Date of birth",verify:"Verify",back:"← Back to language selection",selectTitle:"Multiple people found. Please select yourself.",successTitle:"Identity confirmed",successMsg:"Tap the button below to add it to Apple Wallet.",addBtn:"Add to Apple Wallet",addHint:"After adding, hold your card's QR over the reception scanner on your next visit.",errReq:"Please enter your phone number and date of birth.",errNomatch:"No matching record found. Please check with reception.",errExpired:"This has expired. Please ask reception to re-issue it.",errRate:"Too many attempts. Please try again later.",errNet:"Connection failed. Please try again where the signal is better."},
+  zh:{pageTitle:"电子诊察券",intro:"通过电话号码和出生日期确认身份，将诊察券添加到 Apple Wallet。",phone:"电话号码",dob:"出生日期",verify:"确认",back:"← 返回语言选择",selectTitle:"找到多位患者，请选择本人。",successTitle:"身份确认成功",successMsg:"请点击下方按钮添加到 Apple Wallet。",addBtn:"添加到 Apple Wallet",addHint:"添加后，再次就诊时请将诊察券二维码对准前台扫描仪。",errReq:"请输入电话号码和出生日期。",errNomatch:"未找到匹配信息，请到前台确认。",errExpired:"已过有效期，请到前台申请重新发行。",errRate:"尝试次数已达上限，请稍后再试。",errNet:"通信失败，请在信号良好处重试。"},
+  pt:{pageTitle:"Cartão de Paciente Digital",intro:"Confirme sua identidade com telefone e data de nascimento para adicionar o cartão à Apple Wallet.",phone:"Telefone",dob:"Data de nascimento",verify:"Confirmar",back:"← Voltar à seleção de idioma",selectTitle:"Várias pessoas encontradas. Selecione você mesmo.",successTitle:"Identidade confirmada",successMsg:"Toque no botão abaixo para adicionar à Apple Wallet.",addBtn:"Adicionar à Apple Wallet",addHint:"Após adicionar, aproxime o QR do cartão do leitor da recepção na próxima visita.",errReq:"Digite seu telefone e data de nascimento.",errNomatch:"Nenhum registro encontrado. Verifique na recepção.",errExpired:"Expirado. Peça à recepção para reemitir.",errRate:"Muitas tentativas. Tente novamente mais tarde.",errNet:"Falha na conexão. Tente novamente com melhor sinal."},
+  es:{pageTitle:"Tarjeta de Paciente Digital",intro:"Verifique su identidad con su teléfono y fecha de nacimiento para añadir la tarjeta a Apple Wallet.",phone:"Teléfono",dob:"Fecha de nacimiento",verify:"Verificar",back:"← Volver a la selección de idioma",selectTitle:"Se encontraron varias personas. Seleccione la suya.",successTitle:"Identidad confirmada",successMsg:"Toque el botón de abajo para añadirla a Apple Wallet.",addBtn:"Añadir a Apple Wallet",addHint:"Tras añadirla, acerque el QR de la tarjeta al escáner de recepción en su próxima visita.",errReq:"Ingrese su teléfono y fecha de nacimiento.",errNomatch:"No se encontró coincidencia. Consulte en recepción.",errExpired:"Ha caducado. Pida en recepción que la reemitan.",errRate:"Demasiados intentos. Inténtelo más tarde.",errNet:"Fallo de conexión. Inténtelo de nuevo con mejor señal."},
+  th:{pageTitle:"บัตรผู้ป่วยดิจิทัล",intro:"ยืนยันตัวตนด้วยเบอร์โทรและวันเกิด เพื่อเพิ่มบัตรลง Apple Wallet",phone:"เบอร์โทรศัพท์",dob:"วันเดือนปีเกิด",verify:"ยืนยัน",back:"← กลับไปเลือกภาษา",selectTitle:"พบผู้ป่วยหลายคน กรุณาเลือกตัวท่านเอง",successTitle:"ยืนยันตัวตนสำเร็จ",successMsg:"แตะปุ่มด้านล่างเพื่อเพิ่มลง Apple Wallet",addBtn:"เพิ่มลง Apple Wallet",addHint:"หลังเพิ่มแล้ว เมื่อมาครั้งถัดไปให้นำ QR ของบัตรทาบกับเครื่องสแกนที่แผนกต้อนรับ",errReq:"กรุณากรอกเบอร์โทรและวันเกิด",errNomatch:"ไม่พบข้อมูลที่ตรงกัน กรุณาสอบถามที่แผนกต้อนรับ",errExpired:"หมดอายุแล้ว กรุณาขอออกบัตรใหม่ที่แผนกต้อนรับ",errRate:"พยายามหลายครั้งเกินไป กรุณาลองใหม่ภายหลัง",errNet:"การเชื่อมต่อล้มเหลว กรุณาลองใหม่ในที่สัญญาณดี"}
+};
+
+let LANG = "ja";
+const $ = id => document.getElementById(id);
+const t = k => (I18N[LANG] && I18N[LANG][k]) || I18N.ja[k] || k;
+
+function applyI18n(){
+  document.documentElement.lang = LANG;
+  document.querySelectorAll("[data-t]").forEach(el=>{ el.textContent = t(el.dataset.t); });
+  $("done-msg").textContent = t("successMsg");
+}
+function show(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  $(id).classList.add("active");
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+function showErr(msg){ const e=$("form-err"); e.textContent=msg; e.style.display="block"; window.scrollTo({top:0,behavior:"smooth"}); }
+function clearErr(){ $("form-err").style.display="none"; }
+
+document.querySelectorAll(".lang-btn").forEach(b=>b.addEventListener("click",()=>{
+  LANG=b.dataset.lang; applyI18n(); show("scr-form");
+}));
+$("btn-back").addEventListener("click",()=>show("scr-lang"));
+$("btn-back2").addEventListener("click",()=>show("scr-form"));
+
+function reasonToMsg(reason){
+  if(reason==="expired") return t("errExpired");
+  if(reason==="ratelimited") return t("errRate");
+  return t("errNomatch");
+}
+
+async function callVerify(body){
+  const r = await fetch(CARD_API+"/api/card/verify",{
+    method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)
+  });
+  return { status:r.status, data: await r.json() };
+}
+
+function goWallet(token){
+  // ユーザー操作(タップ)後にトップレベル遷移 → Safari が pkpass を Wallet 追加画面で開く
+  $("btn-add").onclick = ()=>{ window.location.href = CARD_API+"/api/card/pass/"+encodeURIComponent(token); };
+  show("scr-done");
+}
+
+async function doVerify(extra){
+  const phone=$("phone").value.trim(), dob=$("dob").value.trim();
+  if(!phone || !dob){ showErr(t("errReq")); return; }
+  const btn=$("btn-verify"); btn.disabled=true; btn.innerHTML='<span class="spinner"></span>'+t("verify");
+  try{
+    const {status,data} = await callVerify(Object.assign({phone,dob},extra||{}));
+    if(status===429){ showErr(t("errRate")); return; }
+    if(data.ok){ goWallet(data.token); return; }
+    if(data.multiple){ renderCandidates(data.candidates, phone, dob); return; }
+    showErr(reasonToMsg(data.reason));
+  }catch(e){ showErr(t("errNet")); }
+  finally{ btn.disabled=false; btn.innerHTML='<span>'+t("verify")+'</span>'; }
+}
+
+function renderCandidates(candidates, phone, dob){
+  const list=$("cand-list"); list.innerHTML="";
+  candidates.forEach(c=>{
+    const b=document.createElement("button");
+    b.className="cand"; b.textContent=c.name;
+    b.addEventListener("click",async ()=>{
+      const {status,data} = await callVerify({phone,dob,chartNo:c.sel});
+      if(status===429){ show("scr-form"); showErr(t("errRate")); return; }
+      if(data.ok){ goWallet(data.token); }
+      else { show("scr-form"); showErr(reasonToMsg(data.reason)); }
+    });
+    list.append(b);
+  });
+  show("scr-select");
+}
+
+$("btn-verify").addEventListener("click",()=>{ clearErr(); doVerify(); });
+
+applyI18n();
+</script>
+</body>
+</html>

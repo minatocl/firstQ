@@ -63,6 +63,37 @@ pre{background:#fff;border:1.5px solid var(--line);border-radius:10px;padding:12
 @keyframes glow{0%{box-shadow:0 0 0 3px var(--mint)}100%{box-shadow:0 2px 8px rgba(34,134,165,.08)}}
 .empty{text-align:center;padding:60px 20px;color:#7A93A0}
 .empty .icon{font-size:40px;margin-bottom:10px}
+
+/* デジタル診察券 発行 */
+.card-issue{background:#F3F0FB;border:1.5px solid #D6CFF0;border-radius:12px;padding:12px 14px;margin-bottom:16px}
+.card-issue .copy-label span:first-child{color:#4A3F86}
+.issue-row{display:flex;gap:8px;align-items:center;margin-top:8px}
+.chartno-input{flex:1;border:1.5px solid #C9BEEA;border-radius:9px;padding:10px 12px;font-size:15px;font-family:inherit;letter-spacing:.05em;background:#fff;text-align:left}
+.chartno-input:focus{outline:none;border-color:#5B4FB0}
+.btn-issue{background:#5B4FB0;color:#fff;border:none;border-radius:9px;padding:10px 18px;font-size:14px;font-weight:700;white-space:nowrap}
+.btn-issue:disabled{opacity:.55}
+.btn-issue.reissue{background:#fff;color:#5B4FB0;border:1.5px solid #5B4FB0}
+.card-status{font-size:12px;font-weight:800;border-radius:6px;padding:2px 9px}
+.st-none{background:#E6E0F5;color:#6A5FA8}
+.st-issued{background:#DCEFE9;color:#1F7A63}
+.st-added{background:#2BB59A;color:#fff}
+.st-expired{background:#F3D9D9;color:#B03A3A}
+.issue-note{font-size:11.5px;color:#8A7FB8;margin-top:7px}
+
+/* 発行確認ダイアログ */
+#issue-modal{display:none;position:fixed;inset:0;background:rgba(20,16,50,.5);z-index:100;align-items:center;justify-content:center;padding:20px}
+.mdl{background:#fff;border-radius:18px;max-width:380px;width:100%;padding:26px 24px;box-shadow:0 12px 40px rgba(38,32,85,.35);text-align:center}
+.mdl-title{font-size:16px;font-weight:800;color:#5B4FB0;margin-bottom:18px}
+.mdl-name{font-size:26px;font-weight:900;color:#1A1440;line-height:1.25;margin-bottom:4px;word-break:break-all}
+.mdl-sub{font-size:12.5px;color:#7A8894;margin-bottom:18px}
+.mdl-chart-label{font-size:12px;font-weight:800;color:#8A7FB8;letter-spacing:.1em;margin-bottom:4px}
+.mdl-chart{font-size:40px;font-weight:900;font-style:italic;letter-spacing:.08em;color:#262055;background:#F3F0FB;border-radius:12px;padding:10px 0;margin-bottom:22px}
+.mdl-btns{display:flex;gap:10px}
+.mdl-btns button{flex:1;border:none;border-radius:11px;padding:14px;font-size:15px;font-weight:800;font-family:inherit;cursor:pointer}
+.mdl-cancel{background:#EDF0F2;color:#5B7E8C}
+.mdl-ok{background:#5B4FB0;color:#fff}
+.mdl-btns button:active{transform:scale(.97)}
+
 #panel{display:none}
 </style>
 </head>
@@ -92,9 +123,27 @@ pre{background:#fff;border:1.5px solid var(--line);border-radius:10px;padding:12
   </div>
 </div>
 
+<div id="issue-modal">
+  <div class="mdl">
+    <div class="mdl-title" id="mdl-title">診察券を発行します</div>
+    <div class="mdl-name" id="mdl-name"></div>
+    <div class="mdl-sub" id="mdl-sub"></div>
+    <div class="mdl-chart-label">カルテ番号</div>
+    <div class="mdl-chart" id="mdl-chart"></div>
+    <div class="mdl-btns">
+      <button class="mdl-cancel" id="mdl-cancel">キャンセル</button>
+      <button class="mdl-ok" id="mdl-ok">この内容で発行</button>
+    </div>
+  </div>
+</div>
+
 <script>
 /* ================= CONFIG ================= */
 const WORKER_URL = "https://minato-monshin.minato-monshin.workers.dev"; // ← Cloudflare WorkerのURLに変更
+/* デジタル診察券用 Worker(minato-card)。デプロイ時に実URLへ差し替える。
+   動作確認時は ?cardapi=http://127.0.0.1:8787 で上書き可能。 */
+const CARD_API = new URLSearchParams(location.search).get("cardapi")
+  || "https://minato-card.minato-monshin.workers.dev";
 /* ========================================== */
 
 const JA = {
@@ -126,6 +175,60 @@ async function api(path,opts={}){
   if(r.status===401) throw {auth:true};
   if(!r.ok) throw new Error("api");
   return r.json();
+}
+
+/* デジタル診察券 Worker(minato-card)呼び出し */
+let CARD_STATUS = {}; // code -> {chartNo,status,issuedAt,expiresAt}
+async function cardApi(path,opts={}){
+  opts.headers = Object.assign({"X-Passcode":PASS,"Content-Type":"application/json"},opts.headers||{});
+  const r = await fetch(CARD_API+path,opts);
+  if(!r.ok) throw new Error("cardapi "+r.status);
+  return r.json();
+}
+async function loadCardStatuses(codes){
+  CARD_STATUS = {};
+  if(!codes.length) return;
+  try{
+    const d = await cardApi("/api/card/statuses",{method:"POST",body:JSON.stringify({codes})});
+    CARD_STATUS = d.statuses || {};
+  }catch(_){ /* カードWorker未設定でも問診パネルは動く */ }
+}
+const ST_LABEL={issued:"発行済み",added:"追加済み",expired:"期限切れ"};
+const ST_CLASS={issued:"st-issued",added:"st-added",expired:"st-expired"};
+
+/* 発行確認ダイアログ → 確定で実際に発行 */
+function openIssueConfirm(entry, chartNo, ui){
+  const isReissue = ui.issueBtn.classList.contains("reissue");
+  $("mdl-title").textContent = isReissue ? "診察券を再発行します" : "診察券を発行します";
+  $("mdl-name").textContent = entry.name || "(氏名未入力)";
+  $("mdl-sub").textContent = "生年月日 "+fmtDob(entry.dob)+" / 電話 "+(entry.phone||"—");
+  $("mdl-chart").textContent = chartNo;
+  const overlay = $("issue-modal");
+  overlay.style.display = "flex";
+  overlay.onclick = ev=>{ if(ev.target===overlay) overlay.style.display="none"; };
+  $("mdl-cancel").onclick = ()=>{ overlay.style.display="none"; };
+  $("mdl-ok").onclick = ()=>{ overlay.style.display="none"; doIssue(entry, chartNo, ui); };
+}
+async function doIssue(entry, chartNo, ui){
+  const {issueBtn, chartInput, stEl} = ui;
+  const orig = issueBtn.classList.contains("reissue") ? "再発行" : "発行";
+  issueBtn.disabled=true; issueBtn.textContent="…";
+  try{
+    const d=await cardApi("/api/card/issue",{method:"POST",body:JSON.stringify({
+      code:entry.code, chartNo, name:entry.name||"", phone:entry.phone||"", dob:entry.dob||"", lang:entry.lang||"ja"
+    })});
+    if(d.ok){
+      CARD_STATUS[entry.code]={chartNo:d.chartNo,status:d.status,issuedAt:d.issuedAt,expiresAt:d.expiresAt};
+      chartInput.value=d.chartNo;
+      stEl.textContent=ST_LABEL[d.status]||d.status;
+      stEl.className="card-status "+(ST_CLASS[d.status]||"");
+      issueBtn.textContent="再発行"; issueBtn.classList.add("reissue");
+    } else {
+      issueBtn.textContent=orig;
+      alert("発行に失敗しました: "+(d.error==="invalid_chartNo"?"カルテ番号は数字5桁で入力してください":(d.error||"")));
+    }
+  }catch(err){ issueBtn.textContent=orig; alert("通信エラー。カードWorkerのURL設定をご確認ください。"); }
+  finally{ issueBtn.disabled=false; }
 }
 
 function fmtDob(iso){
@@ -179,6 +282,20 @@ function render(list){
     card.className="card"+(fresh.some(f=>f.code===e.code)&&!FIRST?" is-new":"");
     const time=new Date(e.createdAt).toLocaleTimeString("ja-JP",{hour:"2-digit",minute:"2-digit"});
     const clin=clinicalText(e);
+    const cs = CARD_STATUS[e.code];
+    const stKey = cs && cs.status;
+    const stBadge = stKey
+      ? `<span class="card-status ${ST_CLASS[stKey]||''}">${ST_LABEL[stKey]||stKey}</span>`
+      : `<span class="card-status st-none">未発行</span>`;
+    const issueBlock = `
+        <div class="copy-block card-issue">
+          <div class="copy-label"><span>デジタル診察券</span>${stBadge}</div>
+          <div class="issue-row">
+            <input class="chartno-input" inputmode="numeric" maxlength="5" placeholder="カルテ番号(5桁)" value="${cs?esc(cs.chartNo):''}">
+            <button class="btn-issue ${cs?'reissue':''}">${cs?'再発行':'発行'}</button>
+          </div>
+          <div class="issue-note">氏名・電話・生年月日は問診データから自動送信。番号は数字5桁ちょうど(枝番なし)。番号を変えて再発行すると旧番号は無効になります。</div>
+        </div>`;
     card.innerHTML = `
       <div class="card-head">
         <div class="code">${esc(e.code)}</div>
@@ -205,6 +322,7 @@ function render(list){
           <div class="copy-label"><span>診察情報(診察ページへ)</span><button class="btn-copy" data-copy="clin">コピー</button></div>
           <pre data-text="clin">${esc(clin)}</pre>
         </div>
+        ${issueBlock}
         <button class="btn-del">確認済み → 削除</button>
       </div>`;
     card.querySelector(".card-head").addEventListener("click",()=>card.classList.toggle("open"));
@@ -221,6 +339,17 @@ function render(list){
         setTimeout(()=>{btn.textContent="コピー";btn.classList.remove("done");},1800);
       });
     });
+    const issueBtn=card.querySelector(".btn-issue");
+    const chartInput=card.querySelector(".chartno-input");
+    const stEl=card.querySelector(".card-status");
+    issueBtn.addEventListener("click",()=>{
+      const chartNo=(chartInput.value||"").replace(/[^0-9]/g,"");
+      chartInput.value=chartNo;
+      if(!/^\d{5}$/.test(chartNo)){ chartInput.focus(); chartInput.style.borderColor="#B03A3A"; return; }
+      chartInput.style.borderColor="";
+      openIssueConfirm(e, chartNo, {issueBtn, chartInput, stEl});
+    });
+
     const del=card.querySelector(".btn-del");
     del.addEventListener("click",async ()=>{
       if(!del.classList.contains("confirm")){
@@ -240,7 +369,9 @@ function render(list){
 async function load(){
   try{
     const d = await api("/list");
-    render(d.items||[]);
+    const items = d.items||[];
+    await loadCardStatuses(items.map(e=>e.code));
+    render(items);
     $("login").style.display="none"; $("panel").style.display="block";
   }catch(err){
     if(err.auth){
@@ -259,9 +390,34 @@ $("btn-login").addEventListener("click",()=>{
 });
 $("pass").addEventListener("keydown",e=>{if(e.key==="Enter")$("btn-login").click();});
 $("btn-refresh").addEventListener("click",load);
-setInterval(()=>{ if($("panel").style.display==="block") load(); },30000);
+setInterval(()=>{ if($("panel").style.display==="block" && !DEMO) load(); },30000);
 
-if(PASS) load();
+/* デモモード: ?demo=1 でログインなしにサンプル患者で発行UIを確認できる。
+   本番Workerには一切接続しない。?pass=xxxx を付ければ発行ボタンは
+   ローカルのカードWorker(?cardapi=... で指定)に対して実際に動作する。 */
+const DEMO = new URLSearchParams(location.search).has("demo");
+const PASS_OVERRIDE = new URLSearchParams(location.search).get("pass");
+if(PASS_OVERRIDE) PASS = PASS_OVERRIDE;
+
+function startDemo(){
+  $("login").style.display="none"; $("panel").style.display="block";
+  CARD_STATUS = {};
+  const now = new Date();
+  render([
+    {code:"A45", name:"港 花子", dob:"1990-05-15", phone:"090-1234-5678", lang:"ja",
+     symptoms:["fever","cough"], reasonFree:"3日前から", history:["none"], historyFree:"",
+     allergy:["none"], allergyFree:"", zip:"2310806", jpAddress:"神奈川県横浜市中区", address:"本牧1-7",
+     createdAt:new Date(now-3e5).toISOString(), weight:""},
+    {code:"A46", name:"MINATO TARO", dob:"1978-11-02", phone:"080-9876-5432", lang:"en",
+     symptoms:["headache"], reasonFree:"", history:["hypertension"], historyFree:"",
+     allergy:["drug"], allergyFree:"ペニシリン", zip:"", jpAddress:"", address:"Naka-ku, Yokohama",
+     createdAt:new Date(now-9e5).toISOString(), weight:""}
+  ]);
+  $("count").textContent = "デモ表示(本番データではありません)";
+}
+
+if(DEMO) startDemo();
+else if(PASS) load();
 </script>
 </body>
 </html>

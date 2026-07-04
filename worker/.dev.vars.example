@@ -1,0 +1,35 @@
+# このファイルを .dev.vars にコピーして値を入れる(.dev.vars は gitignore 済み)。
+# ローカル `wrangler dev` は .dev.vars を Secret として読み込む。
+#
+# ▼ ダミー動作(Apple 証明書取得前)
+#   1) npm run gen:dummy-certs  を実行すると secrets/ にダミー証明書が生成され、
+#      .dev.vars 用の行が標準出力に表示される。それを .dev.vars に貼る。
+#   2) DUMMY_SIGNING="1" にしておく。
+#
+# ▼ 本番(Apple 証明書取得後)
+#   DUMMY_SIGNING を "0" にし、PASS_CERT_PEM / PASS_KEY_PEM / WWDR_CERT_PEM を
+#   実際の PEM に差し替える。本番環境へは `wrangler secret put <NAME>` で登録する。
+
+DUMMY_SIGNING="1"
+
+# 発行 API のパスコード(admin.html のログインパスコードと同じ値にする)
+ADMIN_PASSCODE="1234"
+
+# ダウンロードトークン用 HMAC 秘密鍵(本番はランダムな長い文字列に)
+TOKEN_SECRET="dev-only-change-me-to-a-long-random-string"
+
+# PEM は複数行。改行を \n に潰さず、そのまま複数行で貼れる(dotenv 形式のダブルクオート内改行可)。
+# gen:dummy-certs の出力をそのまま貼り付けること。
+PASS_CERT_PEM="-----BEGIN CERTIFICATE-----
+...ダミー証明書...
+-----END CERTIFICATE-----"
+
+PASS_KEY_PEM="-----BEGIN PRIVATE KEY-----
+...ダミー秘密鍵...
+-----END PRIVATE KEY-----"
+
+PASS_KEY_PASSPHRASE=""
+
+WWDR_CERT_PEM="-----BEGIN CERTIFICATE-----
+...ダミー(本番は Apple WWDR 中間証明書)...
+-----END CERTIFICATE-----"
