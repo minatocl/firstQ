@@ -182,12 +182,16 @@ function render(list){
     card.innerHTML = `
       <div class="card-head">
         <div class="code">${esc(e.code)}</div>
-        <div class="meta"><b>${time} 送信</b><br>${fmtDob(e.dob)} (${ageFrom(e.dob)})</div>
+        <div class="meta"><b>${esc(e.name||"(氏名未入力)")}</b><br>${time} 送信 / ${fmtDob(e.dob)} (${ageFrom(e.dob)})</div>
         <span class="lang-tag">${JA.langName[e.lang]||e.lang}</span>
         <span class="chev">›</span>
       </div>
       <div class="card-body">
         <div class="dob-line">生年月日: <b>${fmtDob(e.dob)}</b> (${ageFrom(e.dob)}) → カルテ表紙へ手入力</div>
+        <div class="copy-block">
+          <div class="copy-label"><span>氏名(カルテ表紙へ)</span><button class="btn-copy" data-copy="name">コピー</button></div>
+          <pre data-text="name">${esc(e.name||"(未入力)")}</pre>
+        </div>
         <div class="copy-block">
           <div class="copy-label"><span>住所(カルテ表紙へ)</span><button class="btn-copy" data-copy="addr">コピー</button></div>
           <pre data-text="addr">${esc(fullAddr(e))}</pre>
@@ -208,7 +212,7 @@ function render(list){
       btn.addEventListener("click",async ev=>{
         ev.stopPropagation();
         const key=btn.dataset.copy;
-        const text = key==="addr" ? fullAddr(e) : key==="phone" ? (e.phone||"") : clin;
+        const text = key==="addr" ? fullAddr(e) : key==="phone" ? (e.phone||"") : key==="name" ? (e.name||"") : clin;
         try{ await navigator.clipboard.writeText(text); }
         catch(_){ /* http環境用フォールバック */ 
           const ta=document.createElement("textarea");ta.value=text;document.body.append(ta);ta.select();document.execCommand("copy");ta.remove();
