@@ -140,6 +140,13 @@ function ageFrom(iso){
   if(n.getMonth()<b.getMonth()||(n.getMonth()===b.getMonth()&&n.getDate()<b.getDate()))a--;
   return `${a}歳`;
 }
+function fullAddr(e){
+  if(e.jpAddress){
+    const z = e.zip ? `〒${e.zip.slice(0,3)}-${e.zip.slice(3)} ` : "";
+    return `${z}${e.jpAddress} ${e.address||""}`.trim();
+  }
+  return e.address || "(未入力)";
+}
 function esc(s){const d=document.createElement("div");d.textContent=s||"";return d.innerHTML;}
 
 /* 診察情報まとめテキスト(Dynamicsの診察ページに貼る) */
@@ -183,7 +190,7 @@ function render(list){
         <div class="dob-line">生年月日: <b>${fmtDob(e.dob)}</b> (${ageFrom(e.dob)}) → カルテ表紙へ手入力</div>
         <div class="copy-block">
           <div class="copy-label"><span>住所(カルテ表紙へ)</span><button class="btn-copy" data-copy="addr">コピー</button></div>
-          <pre data-text="addr">${esc(e.address||"(未入力)")}</pre>
+          <pre data-text="addr">${esc(fullAddr(e))}</pre>
           ${e.lang!=="ja" ? `<p class="foreign-note">※ 患者記入の原文です(${JA.langName[e.lang]})。保険証と表記の確認を。</p>`:""}
         </div>
         <div class="copy-block">
@@ -201,7 +208,7 @@ function render(list){
       btn.addEventListener("click",async ev=>{
         ev.stopPropagation();
         const key=btn.dataset.copy;
-        const text = key==="addr" ? (e.address||"") : key==="phone" ? (e.phone||"") : clin;
+        const text = key==="addr" ? fullAddr(e) : key==="phone" ? (e.phone||"") : clin;
         try{ await navigator.clipboard.writeText(text); }
         catch(_){ /* http環境用フォールバック */ 
           const ta=document.createElement("textarea");ta.value=text;document.body.append(ta);ta.select();document.execCommand("copy");ta.remove();

@@ -172,7 +172,13 @@ label.field-label{display:block;font-size:13px;font-weight:700;color:var(--teal)
 
     <div class="section" style="--i:2">
       <div class="sec-head"><div class="sec-num">2</div><div class="sec-title" data-t="q2"></div></div>
-      <textarea id="address" data-ph="q2ph"></textarea>
+      <label class="field-label" data-t="qZip"></label>
+      <input type="text" id="zip" inputmode="numeric" autocomplete="postal-code" maxlength="8" data-ph="qZipPh">
+      <p class="hint" style="margin:6px 0 0 2px" data-t="zipHint"></p>
+      <div id="zip-result" style="display:none;margin-top:10px;background:var(--teal-soft);border-radius:12px;padding:10px 14px;font-weight:700;color:var(--teal-dark);font-size:15px"></div>
+      <div id="zip-err" style="display:none;margin-top:10px;color:#9B3535;font-size:13.5px;font-weight:600" data-t="zipErr"></div>
+      <label class="field-label" data-t="qAddr2"></label>
+      <input type="text" id="address" data-ph="addr2Ph">
     </div>
 
     <div class="section" style="--i:3">
@@ -237,27 +243,27 @@ const HISTORY  = ["none","hypertension","diabetes","asthma","heart","stroke","ca
 const ALLERGY  = ["none","drug","food","otherallergy"];
 
 const I18N = {
-ja:{formTag:"問診票",q1:"今日はどうされましたか?",q1hint:"あてはまるものをすべて選んでください",q1free:"詳しく(いつから、など)",q1ph:"例:3日前から",q2:"ご住所",formPurpose:"診察をスムーズに進めるため、症状やアレルギーを事前にお伺いします。所要時間は約2分です。",qPhone:"電話番号",qPhonePh:"090-1234-5678",q2ph:"例:横浜市中区…",q3:"生年月日",yy:"年",mm:"月",dd:"日",qw:"お子さまの体重",qwph:"kg",q4:"今までにかかった病気(既往歴)",q5:"アレルギー",q5detail:"内容(薬品名・食品名など)",q5ph:"例:ペニシリン",other:"その他",send:"送信する",back:"← 言語選択にもどる",doneTitle:"送信しました",doneSub:"ご入力ありがとうございました。受付に「問診票を送信しました」とお声がけのうえ、この画面の番号をお見せください。",codeLabel:"受付コード",errNet:"送信できませんでした。電波の良い場所でもう一度お試しください。",errReq:"「受診理由」「生年月日」を入力してください。",
+ja:{formTag:"問診票",q1:"今日はどうされましたか?",q1hint:"あてはまるものをすべて選んでください",q1free:"詳しく(いつから、など)",q1ph:"例:3日前から",q2:"ご住所",qZip:"郵便番号(ハイフンなし)",qZipPh:"例: 2310023",zipHint:"入力すると住所が自動で表示されます",zipErr:"住所が見つかりません。番号をご確認ください。",qAddr2:"番地・建物名・部屋番号",addr2Ph:"例: 1-2-3 みなとビル402",formPurpose:"診察をスムーズに進めるため、症状やアレルギーを事前にお伺いします。所要時間は約2分です。",qPhone:"電話番号",qPhonePh:"090-1234-5678",q2ph:"例:横浜市中区…",q3:"生年月日",yy:"年",mm:"月",dd:"日",qw:"お子さまの体重",qwph:"kg",q4:"今までにかかった病気(既往歴)",q5:"アレルギー",q5detail:"内容(薬品名・食品名など)",q5ph:"例:ペニシリン",other:"その他",send:"送信する",back:"← 言語選択にもどる",doneTitle:"送信しました",doneSub:"ご入力ありがとうございました。受付に「問診票を送信しました」とお声がけのうえ、この画面の番号をお見せください。",codeLabel:"受付コード",errNet:"送信できませんでした。電波の良い場所でもう一度お試しください。",errReq:"「受診理由」「生年月日」を入力してください。",
 sym:{fever:"発熱",cough:"咳",sorethroat:"のどの痛み",runnynose:"鼻水",headache:"頭痛",stomachache:"腹痛",diarrhea:"下痢",nausea:"吐き気・嘔吐",skin:"皮膚の症状",injury:"けが",vaccine:"予防接種",checkup:"健診・検査"},
 his:{none:"なし",hypertension:"高血圧",diabetes:"糖尿病",asthma:"喘息",heart:"心臓病",stroke:"脳卒中",cancer:"がん",liver:"肝臓病",kidney:"腎臓病"},
 alg:{none:"なし",drug:"薬",food:"食物",otherallergy:"その他"}},
-en:{formTag:"Medical Questionnaire",q1:"What brings you in today?",q1hint:"Select all that apply",q1free:"Details (since when, etc.)",q1ph:"e.g. since 3 days ago",q2:"Address in Japan",formPurpose:"To make your visit smoother, please tell us about your symptoms and allergies in advance. Takes about 2 minutes.",qPhone:"Phone number",qPhonePh:"090-1234-5678",q2ph:"e.g. Naka-ku, Yokohama...",q3:"Date of birth",yy:"Year",mm:"Month",dd:"Day",qw:"Child's weight",qwph:"kg",q4:"Past medical history",q5:"Allergies",q5detail:"Details (drug / food name)",q5ph:"e.g. penicillin",other:"Other",send:"Send",back:"← Back to language selection",doneTitle:"Sent!",doneSub:"Thank you! Please tell the reception desk \"I sent the questionnaire\" and show them this number.",codeLabel:"RECEPTION CODE",errNet:"Could not send. Please try again with a better connection.",errReq:"Please fill in the reason for your visit and date of birth.",
+en:{formTag:"Medical Questionnaire",q1:"What brings you in today?",q1hint:"Select all that apply",q1free:"Details (since when, etc.)",q1ph:"e.g. since 3 days ago",q2:"Address in Japan",qZip:"Postal code (7 digits, no hyphen)",qZipPh:"e.g. 2310023",zipHint:"Your address will appear automatically.",zipErr:"Address not found. Please check the number.",qAddr2:"House number, building, room",addr2Ph:"e.g. 1-2-3 Minato Bldg 402",formPurpose:"To make your visit smoother, please tell us about your symptoms and allergies in advance. Takes about 2 minutes.",qPhone:"Phone number",qPhonePh:"090-1234-5678",q2ph:"e.g. Naka-ku, Yokohama...",q3:"Date of birth",yy:"Year",mm:"Month",dd:"Day",qw:"Child's weight",qwph:"kg",q4:"Past medical history",q5:"Allergies",q5detail:"Details (drug / food name)",q5ph:"e.g. penicillin",other:"Other",send:"Send",back:"← Back to language selection",doneTitle:"Sent!",doneSub:"Thank you! Please tell the reception desk \"I sent the questionnaire\" and show them this number.",codeLabel:"RECEPTION CODE",errNet:"Could not send. Please try again with a better connection.",errReq:"Please fill in the reason for your visit and date of birth.",
 sym:{fever:"Fever",cough:"Cough",sorethroat:"Sore throat",runnynose:"Runny nose",headache:"Headache",stomachache:"Stomach ache",diarrhea:"Diarrhea",nausea:"Nausea / vomiting",skin:"Skin problem",injury:"Injury",vaccine:"Vaccination",checkup:"Check-up / test"},
 his:{none:"None",hypertension:"High blood pressure",diabetes:"Diabetes",asthma:"Asthma",heart:"Heart disease",stroke:"Stroke",cancer:"Cancer",liver:"Liver disease",kidney:"Kidney disease"},
 alg:{none:"None",drug:"Medication",food:"Food",otherallergy:"Other"}},
-zh:{formTag:"问诊表",q1:"今天有什么不舒服?",q1hint:"请选择所有符合的项目",q1free:"详细情况(从什么时候开始等)",q1ph:"例:3天前开始",q2:"在日住址",formPurpose:"为使就诊更顺利,请提前告知您的症状和过敏情况。约需2分钟。",qPhone:"电话号码",qPhonePh:"090-1234-5678",q2ph:"例:横滨市中区…",q3:"出生日期",yy:"年",mm:"月",dd:"日",qw:"孩子的体重",qwph:"kg",q4:"既往病史",q5:"过敏",q5detail:"具体内容(药品名/食品名)",q5ph:"例:青霉素",other:"其他",send:"发送",back:"← 返回语言选择",doneTitle:"已发送",doneSub:"感谢您的填写。请告知前台\"问诊表已发送\",并出示此号码。",codeLabel:"受理号码",errNet:"发送失败。请在信号良好的地方重试。",errReq:"请填写就诊原因和出生日期。",
+zh:{formTag:"问诊表",q1:"今天有什么不舒服?",q1hint:"请选择所有符合的项目",q1free:"详细情况(从什么时候开始等)",q1ph:"例:3天前开始",q2:"在日住址",qZip:"邮政编码(7位数字,无连字符)",qZipPh:"例: 2310023",zipHint:"输入后将自动显示地址。",zipErr:"未找到地址,请确认号码。",qAddr2:"门牌号・楼名・房间号",addr2Ph:"例: 1-2-3 Minato大楼402",formPurpose:"为使就诊更顺利,请提前告知您的症状和过敏情况。约需2分钟。",qPhone:"电话号码",qPhonePh:"090-1234-5678",q2ph:"例:横滨市中区…",q3:"出生日期",yy:"年",mm:"月",dd:"日",qw:"孩子的体重",qwph:"kg",q4:"既往病史",q5:"过敏",q5detail:"具体内容(药品名/食品名)",q5ph:"例:青霉素",other:"其他",send:"发送",back:"← 返回语言选择",doneTitle:"已发送",doneSub:"感谢您的填写。请告知前台\"问诊表已发送\",并出示此号码。",codeLabel:"受理号码",errNet:"发送失败。请在信号良好的地方重试。",errReq:"请填写就诊原因和出生日期。",
 sym:{fever:"发烧",cough:"咳嗽",sorethroat:"喉咙痛",runnynose:"流鼻涕",headache:"头痛",stomachache:"腹痛",diarrhea:"腹泻",nausea:"恶心/呕吐",skin:"皮肤症状",injury:"外伤",vaccine:"疫苗接种",checkup:"体检/检查"},
 his:{none:"无",hypertension:"高血压",diabetes:"糖尿病",asthma:"哮喘",heart:"心脏病",stroke:"脑卒中",cancer:"癌症",liver:"肝病",kidney:"肾病"},
 alg:{none:"无",drug:"药物",food:"食物",otherallergy:"其他"}},
-pt:{formTag:"Questionário Médico",q1:"O que o traz aqui hoje?",q1hint:"Selecione todas as opções aplicáveis",q1free:"Detalhes (desde quando, etc.)",q1ph:"ex.: desde 3 dias atrás",q2:"Endereço no Japão",formPurpose:"Para agilizar sua consulta, informe seus sintomas e alergias com antecedência. Leva cerca de 2 minutos.",qPhone:"Telefone",qPhonePh:"090-1234-5678",q2ph:"ex.: Naka-ku, Yokohama...",q3:"Data de nascimento",yy:"Ano",mm:"Mês",dd:"Dia",qw:"Peso da criança",qwph:"kg",q4:"Histórico médico",q5:"Alergias",q5detail:"Detalhes (nome do remédio / alimento)",q5ph:"ex.: penicilina",other:"Outro",send:"Enviar",back:"← Voltar à seleção de idioma",doneTitle:"Enviado!",doneSub:"Obrigado! Avise a recepção que enviou o questionário e mostre este número.",codeLabel:"CÓDIGO DE RECEPÇÃO",errNet:"Não foi possível enviar. Tente novamente com melhor conexão.",errReq:"Preencha o motivo da consulta e a data de nascimento.",
+pt:{formTag:"Questionário Médico",q1:"O que o traz aqui hoje?",q1hint:"Selecione todas as opções aplicáveis",q1free:"Detalhes (desde quando, etc.)",q1ph:"ex.: desde 3 dias atrás",q2:"Endereço no Japão",qZip:"Código postal (7 dígitos, sem hífen)",qZipPh:"ex.: 2310023",zipHint:"Seu endereço aparecerá automaticamente.",zipErr:"Endereço não encontrado. Verifique o número.",qAddr2:"Número, prédio, quarto",addr2Ph:"ex.: 1-2-3 Minato Bldg 402",formPurpose:"Para agilizar sua consulta, informe seus sintomas e alergias com antecedência. Leva cerca de 2 minutos.",qPhone:"Telefone",qPhonePh:"090-1234-5678",q2ph:"ex.: Naka-ku, Yokohama...",q3:"Data de nascimento",yy:"Ano",mm:"Mês",dd:"Dia",qw:"Peso da criança",qwph:"kg",q4:"Histórico médico",q5:"Alergias",q5detail:"Detalhes (nome do remédio / alimento)",q5ph:"ex.: penicilina",other:"Outro",send:"Enviar",back:"← Voltar à seleção de idioma",doneTitle:"Enviado!",doneSub:"Obrigado! Avise a recepção que enviou o questionário e mostre este número.",codeLabel:"CÓDIGO DE RECEPÇÃO",errNet:"Não foi possível enviar. Tente novamente com melhor conexão.",errReq:"Preencha o motivo da consulta e a data de nascimento.",
 sym:{fever:"Febre",cough:"Tosse",sorethroat:"Dor de garganta",runnynose:"Coriza",headache:"Dor de cabeça",stomachache:"Dor de estômago",diarrhea:"Diarreia",nausea:"Náusea / vômito",skin:"Problema de pele",injury:"Ferimento",vaccine:"Vacinação",checkup:"Exame / check-up"},
 his:{none:"Nenhum",hypertension:"Pressão alta",diabetes:"Diabetes",asthma:"Asma",heart:"Doença cardíaca",stroke:"AVC",cancer:"Câncer",liver:"Doença hepática",kidney:"Doença renal"},
 alg:{none:"Nenhuma",drug:"Medicamento",food:"Alimento",otherallergy:"Outra"}},
-th:{formTag:"แบบสอบถามทางการแพทย์",q1:"วันนี้มาด้วยอาการอะไร?",q1hint:"เลือกได้มากกว่าหนึ่งข้อ",q1free:"รายละเอียด (เริ่มเมื่อไหร่ ฯลฯ)",q1ph:"เช่น เริ่มเมื่อ 3 วันก่อน",q2:"ที่อยู่ในญี่ปุ่น",formPurpose:"เพื่อให้การตรวจรวดเร็วขึ้น กรุณาแจ้งอาการและการแพ้ล่วงหน้า ใช้เวลาประมาณ 2 นาที",qPhone:"เบอร์โทรศัพท์",qPhonePh:"090-1234-5678",q2ph:"เช่น Naka-ku, Yokohama...",q3:"วันเดือนปีเกิด",yy:"ปี (ค.ศ.)",mm:"เดือน",dd:"วัน",qw:"น้ำหนักของเด็ก",qwph:"กก.",q4:"ประวัติการเจ็บป่วย",q5:"การแพ้",q5detail:"รายละเอียด (ชื่อยา / อาหาร)",q5ph:"เช่น เพนิซิลลิน",other:"อื่นๆ",send:"ส่ง",back:"← กลับไปเลือกภาษา",doneTitle:"ส่งแล้ว!",doneSub:"ขอบคุณค่ะ/ครับ กรุณาแจ้งแผนกต้อนรับว่า \"ส่งแบบสอบถามแล้ว\" และแสดงหมายเลขนี้",codeLabel:"รหัสรับบริการ",errNet:"ส่งไม่สำเร็จ กรุณาลองใหม่ในที่ที่สัญญาณดี",errReq:"กรุณากรอกเหตุผลที่มาพบแพทย์และวันเกิด",
+th:{formTag:"แบบสอบถามทางการแพทย์",q1:"วันนี้มาด้วยอาการอะไร?",q1hint:"เลือกได้มากกว่าหนึ่งข้อ",q1free:"รายละเอียด (เริ่มเมื่อไหร่ ฯลฯ)",q1ph:"เช่น เริ่มเมื่อ 3 วันก่อน",q2:"ที่อยู่ในญี่ปุ่น",qZip:"รหัสไปรษณีย์ (7 หลัก ไม่มีขีด)",qZipPh:"เช่น 2310023",zipHint:"ที่อยู่จะแสดงโดยอัตโนมัติ",zipErr:"ไม่พบที่อยู่ กรุณาตรวจสอบหมายเลข",qAddr2:"บ้านเลขที่ อาคาร ห้อง",addr2Ph:"เช่น 1-2-3 Minato Bldg 402",formPurpose:"เพื่อให้การตรวจรวดเร็วขึ้น กรุณาแจ้งอาการและการแพ้ล่วงหน้า ใช้เวลาประมาณ 2 นาที",qPhone:"เบอร์โทรศัพท์",qPhonePh:"090-1234-5678",q2ph:"เช่น Naka-ku, Yokohama...",q3:"วันเดือนปีเกิด",yy:"ปี (ค.ศ.)",mm:"เดือน",dd:"วัน",qw:"น้ำหนักของเด็ก",qwph:"กก.",q4:"ประวัติการเจ็บป่วย",q5:"การแพ้",q5detail:"รายละเอียด (ชื่อยา / อาหาร)",q5ph:"เช่น เพนิซิลลิน",other:"อื่นๆ",send:"ส่ง",back:"← กลับไปเลือกภาษา",doneTitle:"ส่งแล้ว!",doneSub:"ขอบคุณค่ะ/ครับ กรุณาแจ้งแผนกต้อนรับว่า \"ส่งแบบสอบถามแล้ว\" และแสดงหมายเลขนี้",codeLabel:"รหัสรับบริการ",errNet:"ส่งไม่สำเร็จ กรุณาลองใหม่ในที่ที่สัญญาณดี",errReq:"กรุณากรอกเหตุผลที่มาพบแพทย์และวันเกิด",
 sym:{fever:"ไข้",cough:"ไอ",sorethroat:"เจ็บคอ",runnynose:"น้ำมูกไหล",headache:"ปวดหัว",stomachache:"ปวดท้อง",diarrhea:"ท้องเสีย",nausea:"คลื่นไส้/อาเจียน",skin:"อาการทางผิวหนัง",injury:"บาดเจ็บ",vaccine:"ฉีดวัคซีน",checkup:"ตรวจสุขภาพ"},
 his:{none:"ไม่มี",hypertension:"ความดันสูง",diabetes:"เบาหวาน",asthma:"หอบหืด",heart:"โรคหัวใจ",stroke:"หลอดเลือดสมอง",cancer:"มะเร็ง",liver:"โรคตับ",kidney:"โรคไต"},
 alg:{none:"ไม่มี",drug:"ยา",food:"อาหาร",otherallergy:"อื่นๆ"}},
-es:{formTag:"Cuestionario Médico",q1:"¿Qué le trae hoy a la clínica?",q1hint:"Seleccione todas las opciones que correspondan",q1free:"Detalles (desde cuándo, etc.)",q1ph:"ej.: desde hace 3 días",q2:"Dirección en Japón",formPurpose:"Para agilizar su consulta, indíquenos sus síntomas y alergias con antelación. Toma unos 2 minutos.",qPhone:"Teléfono",qPhonePh:"090-1234-5678",q2ph:"ej.: Naka-ku, Yokohama...",q3:"Fecha de nacimiento",yy:"Año",mm:"Mes",dd:"Día",qw:"Peso del niño/a",qwph:"kg",q4:"Antecedentes médicos",q5:"Alergias",q5detail:"Detalles (nombre del medicamento / alimento)",q5ph:"ej.: penicilina",other:"Otro",send:"Enviar",back:"← Volver a la selección de idioma",doneTitle:"¡Enviado!",doneSub:"¡Gracias! Avise en recepción que envió el cuestionario y muestre este número.",codeLabel:"CÓDIGO DE RECEPCIÓN",errNet:"No se pudo enviar. Inténtelo de nuevo con mejor conexión.",errReq:"Complete el motivo de la visita y la fecha de nacimiento.",
+es:{formTag:"Cuestionario Médico",q1:"¿Qué le trae hoy a la clínica?",q1hint:"Seleccione todas las opciones que correspondan",q1free:"Detalles (desde cuándo, etc.)",q1ph:"ej.: desde hace 3 días",q2:"Dirección en Japón",qZip:"Código postal (7 dígitos, sin guion)",qZipPh:"ej.: 2310023",zipHint:"Su dirección aparecerá automáticamente.",zipErr:"Dirección no encontrada. Verifique el número.",qAddr2:"Número, edificio, habitación",addr2Ph:"ej.: 1-2-3 Minato Bldg 402",formPurpose:"Para agilizar su consulta, indíquenos sus síntomas y alergias con antelación. Toma unos 2 minutos.",qPhone:"Teléfono",qPhonePh:"090-1234-5678",q2ph:"ej.: Naka-ku, Yokohama...",q3:"Fecha de nacimiento",yy:"Año",mm:"Mes",dd:"Día",qw:"Peso del niño/a",qwph:"kg",q4:"Antecedentes médicos",q5:"Alergias",q5detail:"Detalles (nombre del medicamento / alimento)",q5ph:"ej.: penicilina",other:"Otro",send:"Enviar",back:"← Volver a la selección de idioma",doneTitle:"¡Enviado!",doneSub:"¡Gracias! Avise en recepción que envió el cuestionario y muestre este número.",codeLabel:"CÓDIGO DE RECEPCIÓN",errNet:"No se pudo enviar. Inténtelo de nuevo con mejor conexión.",errReq:"Complete el motivo de la visita y la fecha de nacimiento.",
 sym:{fever:"Fiebre",cough:"Tos",sorethroat:"Dolor de garganta",runnynose:"Congestión nasal",headache:"Dolor de cabeza",stomachache:"Dolor de estómago",diarrhea:"Diarrea",nausea:"Náuseas / vómitos",skin:"Problema de piel",injury:"Lesión",vaccine:"Vacunación",checkup:"Chequeo / examen"},
 his:{none:"Ninguno",hypertension:"Hipertensión",diabetes:"Diabetes",asthma:"Asma",heart:"Enfermedad cardíaca",stroke:"Derrame cerebral",cancer:"Cáncer",liver:"Enfermedad hepática",kidney:"Enfermedad renal"},
 alg:{none:"Ninguna",drug:"Medicamento",food:"Alimento",otherallergy:"Otra"}}
@@ -319,6 +325,32 @@ document.querySelectorAll(".lang-btn").forEach(b=>b.addEventListener("click",()=
 }));
 $("btn-back").addEventListener("click",()=>show("scr-lang"));
 
+/* zip -> Japanese address (zipcloud JSONP) */
+let JP_ADDR = "";
+function zipLookup(code, cb){
+  const fn = "zipcb_" + Date.now();
+  const sc = document.createElement("script");
+  window[fn] = res => { delete window[fn]; sc.remove(); cb(res); };
+  sc.onerror = () => { delete window[fn]; sc.remove(); cb(null); };
+  sc.src = `https://zipcloud.ibsnet.co.jp/api/search?zipcode=${code}&callback=${fn}`;
+  document.body.append(sc);
+}
+$("zip").addEventListener("input", ()=>{
+  const digits = $("zip").value.replace(/[^0-9]/g,"");
+  $("zip-result").style.display="none"; $("zip-err").style.display="none"; JP_ADDR="";
+  if(digits.length !== 7) return;
+  zipLookup(digits, res=>{
+    const r = res && res.results && res.results[0];
+    if(r){
+      JP_ADDR = r.address1 + r.address2 + r.address3;
+      $("zip-result").textContent = "〒" + digits.slice(0,3) + "-" + digits.slice(3) + "  " + JP_ADDR;
+      $("zip-result").style.display = "block";
+    }else{
+      $("zip-err").style.display = "block";
+    }
+  });
+});
+
 /* show weight field if under 16 (child) */
 function updateWeightVisibility(){
   const v=getDob(); if(!v) return;
@@ -339,6 +371,8 @@ $("btn-submit").addEventListener("click", async ()=>{
   const payload={
     lang:LANG, createdAt:new Date().toISOString(),
     symptoms:sym, reasonFree,
+    zip:$("zip").value.replace(/[^0-9]/g,""),
+    jpAddress:JP_ADDR,
     address:$("address").value.trim(),
     phone:$("phone").value.trim(),
     dob,
