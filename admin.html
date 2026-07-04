@@ -156,8 +156,8 @@ function clinicalText(e){
   const his = [ ...e.history.map(k=>JA.his[k]||k), e.historyFree ].filter(Boolean).join("、") || "記載なし";
   let alg = e.allergy.map(k=>JA.alg[k]||k).join("、") || "記載なし";
   if(e.allergyFree) alg += `(${e.allergyFree})`;
-  let out = `【受診理由】${reason}\n【既往歴】${his}\n【アレルギー】${alg}`;
-  if(e.weight) out += `\n【体重】${e.weight}kg`;
+  let out = `【受診理由】${reason}【既往歴】${his}【アレルギー】${alg}`;
+  if(e.weight) out += `【体重】${e.weight}kg`;
   return out;
 }
 
