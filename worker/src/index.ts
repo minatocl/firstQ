@@ -11,7 +11,7 @@
 import type { Env } from "./config";
 import { googleConfigured } from "./google/wallet";
 import { handleGooglePass } from "./googlePass";
-import { preflight } from "./http";
+import { json, preflight } from "./http";
 import { handleIssue } from "./issue";
 import { handlePass } from "./pass";
 import { handleStatuses } from "./statuses";
@@ -42,14 +42,16 @@ export default {
       return handleGooglePass(req, env, googleMatch[1]);
     }
     if (path === "/api/card/health" && req.method === "GET") {
-      return new Response(
-        JSON.stringify({
+      return json(
+        {
           ok: true,
           service: "minato-card",
           signing: env.DUMMY_SIGNING === "1" ? "dummy" : "production",
           google: googleConfigured(env) ? "configured" : "off",
-        }),
-        { headers: { "Content-Type": "application/json" } },
+        },
+        { status: 200 },
+        req,
+        env,
       );
     }
 
