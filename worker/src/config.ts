@@ -24,6 +24,12 @@ export interface Env {
   PASS_KEY_PEM: string; // 上記に対応する秘密鍵 (PEM)
   PASS_KEY_PASSPHRASE?: string; // 秘密鍵パスフレーズ(任意)
   WWDR_CERT_PEM: string; // Apple WWDR 中間証明書 (PEM)
+
+  // Google Wallet(Android)。未設定なら Google 導線は無効。
+  GOOGLE_ISSUER_ID?: string; // Google Wallet 発行者 ID(数字)
+  GOOGLE_SA_EMAIL?: string; // サービスアカウントの client_email
+  GOOGLE_SA_PRIVATE_KEY?: string; // サービスアカウントの private_key(PKCS#8 PEM)
+  GOOGLE_LOGO_URI?: string; // 券面ロゴ(公開URL・正方形)。未設定は既定URL
 }
 
 /** pass.json の配色(仕様書「配色」表) */

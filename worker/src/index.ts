@@ -9,6 +9,8 @@
  *   GET  /api/card/health       稼働確認 / 署名モード表示
  */
 import type { Env } from "./config";
+import { googleConfigured } from "./google/wallet";
+import { handleGooglePass } from "./googlePass";
 import { preflight } from "./http";
 import { handleIssue } from "./issue";
 import { handlePass } from "./pass";
@@ -35,12 +37,17 @@ export default {
     if (passMatch && req.method === "GET") {
       return handlePass(req, env, passMatch[1]);
     }
+    const googleMatch = path.match(/^\/api\/card\/google\/([A-Za-z0-9._-]+)$/);
+    if (googleMatch && req.method === "GET") {
+      return handleGooglePass(req, env, googleMatch[1]);
+    }
     if (path === "/api/card/health" && req.method === "GET") {
       return new Response(
         JSON.stringify({
           ok: true,
           service: "minato-card",
           signing: env.DUMMY_SIGNING === "1" ? "dummy" : "production",
+          google: googleConfigured(env) ? "configured" : "off",
         }),
         { headers: { "Content-Type": "application/json" } },
       );
