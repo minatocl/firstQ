@@ -11,9 +11,9 @@
 
   // --- 公開しても問題ない設定値(Secret ではない) ---
   "vars": {
-    // Apple Developer から取得した実値に差し替える。ダミー動作中は例のままでよい。
+    // Apple Developer の実値(Pass Type ID / Team ID)
     "PASS_TYPE_IDENTIFIER": "pass.com.minato6633.card",
-    "TEAM_IDENTIFIER": "TEAMID0000",
+    "TEAM_IDENTIFIER": "773B92JWW4",
     "ORG_NAME": "みなとクリニック",
     // 発行レコードの有効期間(時間)。仕様: 72時間
     "CARD_TTL_HOURS": "72",
