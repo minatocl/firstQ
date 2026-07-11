@@ -5,7 +5,7 @@
 import type { Env } from "./config";
 import { buildGoogleSaveUrl, googleConfigured } from "./google/wallet";
 import { effectiveStatus, getCard, updateCard } from "./kv";
-import { verifyAndConsumeToken } from "./token";
+import { verifyDownloadToken } from "./token";
 
 export async function handleGooglePass(
   _req: Request,
@@ -16,7 +16,7 @@ export async function handleGooglePass(
     return new Response("google wallet not configured", { status: 503 });
   }
 
-  const res = await verifyAndConsumeToken(env, token);
+  const res = await verifyDownloadToken(env, token);
   if (!res.ok) {
     const status = res.reason === "expired" || res.reason === "used" ? 410 : 400;
     return new Response(`token ${res.reason}`, { status });

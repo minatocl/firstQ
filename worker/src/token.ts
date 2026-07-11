@@ -1,8 +1,11 @@
 /**
  * ダウンロードトークン: HMAC-SHA256(カルテ番号 + exp + nonce)。
- * 仕様: 有効10分、1回使用で KV に消込。
- * - HMAC で改ざん検知
- * - KV の nonce レコードで「1回だけ使える」を担保(消込 = get して即 delete)
+ * 仕様: 有効10分。HMAC署名＋有効期限で担保し、期限内は再利用可。
+ *
+ * ※ 以前は KV nonce で「1回きり(即消し)」にしていたが、iOS Safari が
+ *   pkpass 取得時に同一URLを二重リクエストすることがあり、2回目が「used」
+ *   エラーになる不具合が出た。自分の診察券を10分内に再取得できるだけで実害が
+ *   ないため、one-time 消込を廃止して二重リクエスト/再タップに強くした。
  */
 import type { Env } from "./config";
 
@@ -42,26 +45,24 @@ function timingSafeEqual(a: Uint8Array, b: Uint8Array): boolean {
 
 const ttlMinutes = (env: Env) => Math.max(1, parseInt(env.TOKEN_TTL_MINUTES || "10", 10));
 
-/** 発行: 照合成功時に呼ぶ。トークン文字列を返す。 */
+/** 発行: 照合成功時に呼ぶ。署名付きトークン文字列を返す(KVは使わない)。 */
 export async function issueDownloadToken(env: Env, chartNo: string): Promise<string> {
   const exp = nowMs() + ttlMinutes(env) * 60_000;
-  const nonce = crypto.randomUUID();
+  const nonce = crypto.randomUUID(); // トークンを一意化(推測防止)
   const payload = `${chartNo}.${exp}.${nonce}`;
   const sig = await sign(env.TOKEN_SECRET, payload);
-  const token = `${b64url(enc.encode(payload))}.${b64url(sig)}`;
-  // 1回消込用の nonce レコード。TTL 経過で自動失効。
-  await env.CARD_KV.put(`dltok:${nonce}`, chartNo, {
-    expirationTtl: ttlMinutes(env) * 60,
-  });
-  return token;
+  return `${b64url(enc.encode(payload))}.${b64url(sig)}`;
 }
 
 export type TokenResult =
   | { ok: true; chartNo: string }
   | { ok: false; reason: "malformed" | "badsig" | "expired" | "used" };
 
-/** 検証 + 消込。成功時 chartNo を返し、KV レコードを削除する。 */
-export async function verifyAndConsumeToken(env: Env, token: string): Promise<TokenResult> {
+/**
+ * 検証: HMAC署名 + 有効期限(10分)を確認。成功時 chartNo を返す。
+ * 期限内は何度でも使える(二重リクエスト・再タップ耐性)。
+ */
+export async function verifyDownloadToken(env: Env, token: string): Promise<TokenResult> {
   const parts = token.split(".");
   if (parts.length !== 2) return { ok: false, reason: "malformed" };
   let payload: string;
@@ -72,7 +73,8 @@ export async function verifyAndConsumeToken(env: Env, token: string): Promise<To
   }
   const seg = payload.split(".");
   if (seg.length !== 3) return { ok: false, reason: "malformed" };
-  const [chartNo, expStr, nonce] = seg;
+  const chartNo = seg[0];
+  const expStr = seg[1];
 
   const expected = await sign(env.TOKEN_SECRET, payload);
   let got: Uint8Array;
@@ -82,13 +84,8 @@ export async function verifyAndConsumeToken(env: Env, token: string): Promise<To
     return { ok: false, reason: "malformed" };
   }
   if (!timingSafeEqual(expected, got)) return { ok: false, reason: "badsig" };
-
   if (nowMs() > Number(expStr)) return { ok: false, reason: "expired" };
 
-  // 1回消込: nonce レコードを取得し、無ければ使用済み。
-  const rec = await env.CARD_KV.get(`dltok:${nonce}`);
-  if (rec === null || rec !== chartNo) return { ok: false, reason: "used" };
-  await env.CARD_KV.delete(`dltok:${nonce}`);
   return { ok: true, chartNo };
 }
 

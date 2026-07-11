@@ -79,9 +79,9 @@ async function main() {
   await writeFile("/tmp/minato-card.pkpass", buf);
   console.log(`  saved /tmp/minato-card.pkpass (${buf.length} bytes)`);
 
-  // 6) トークン再利用は不可(1回消込)
+  // 6) トークンは有効期限内は再利用可(iOS Safari の二重リクエスト耐性)
   const reuse = await fetch(`${BASE}/api/card/pass/${verify.token}`);
-  ok(reuse.status === 410, "token reuse → 410");
+  ok(reuse.status === 200, "token reuse within expiry → 200 (再取得OK)");
 
   // 7) .pkpass 展開して検証
   const files = unzipSync(buf);
@@ -139,10 +139,15 @@ async function main() {
     chartNo: "123456", name: "六桁", phone: "07000000000", dob: "2000-01-01", code: "C99",
   })).json();
   ok(bad6.error === "invalid_chartNo", "6桁カルテ番号 → invalid_chartNo");
-  const bad4 = await (await postJson("/api/card/issue", AUTH, {
+  // カルテ番号は1〜5桁対応(先頭0除去)。4桁は有効、非数字は無効。
+  const ok4 = await (await postJson("/api/card/issue", AUTH, {
     chartNo: "1234", name: "四桁", phone: "07000000001", dob: "2000-01-01", code: "C98",
   })).json();
-  ok(bad4.error === "invalid_chartNo", "4桁カルテ番号 → invalid_chartNo");
+  ok(ok4.ok === true, "4桁カルテ番号 → 有効(1〜5桁対応)");
+  const badNum = await (await postJson("/api/card/issue", AUTH, {
+    chartNo: "12a4", name: "非数字", phone: "07000000002", dob: "2000-01-01", code: "C97",
+  })).json();
+  ok(badNum.error === "invalid_chartNo", "非数字カルテ番号 → invalid_chartNo");
 
   // 9) 番号変更の再発行 → 旧番号は照合で無効・statuses は新番号
   const codeR = "R01", phoneR = "070-1111-2222", dobR = "1975-08-08";
