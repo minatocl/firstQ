@@ -39,15 +39,16 @@ export async function handleIssue(req: Request, env: Env): Promise<Response> {
     return json({ ok: false, error: "bad_json" }, { status: 400 }, req, env);
   }
 
-  const chartNo = (body.chartNo || "").trim();
+  // 頭の0は除去して保存する(古い患者は3〜4桁。入力は0埋め5桁でも可、QR/券面は本来の桁数)
+  const chartNo = (body.chartNo || "").trim().replace(/^0+(?=\d)/, "");
   const name = (body.name || "").trim();
   const phone = (body.phone || "").trim();
   const dob = (body.dob || "").trim();
   const code = (body.code || "").trim();
   const lang = (body.lang || "ja").trim();
 
-  // カルテ番号は数字5桁ちょうど(枝番なし。スキャナがそのまま Dynamics に打鍵)
-  if (!/^\d{5}$/.test(chartNo)) {
+  // カルテ番号は数字1〜5桁(枝番なし。スキャナがそのまま Dynamics に打鍵)
+  if (!/^\d{1,5}$/.test(chartNo)) {
     return json({ ok: false, error: "invalid_chartNo" }, { status: 400 }, req, env);
   }
   if (!name) {

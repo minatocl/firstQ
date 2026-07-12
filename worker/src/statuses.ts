@@ -27,18 +27,21 @@ export async function handleStatuses(req: Request, env: Env): Promise<Response> 
     { chartNo: string; status: string; issuedAt: number; expiresAt: number }
   > = {};
 
-  for (const code of codes) {
-    const chartNo = await getChartNoByCode(env, code);
-    if (!chartNo) continue;
-    const rec = await getCard(env, chartNo);
-    if (!rec) continue;
-    statuses[code] = {
-      chartNo: rec.chartNo,
-      status: effectiveStatus(rec, now),
-      issuedAt: rec.issuedAt,
-      expiresAt: rec.expiresAt,
-    };
-  }
+  // コードごとに直列で読むとKVの待ち時間×件数かかるため、全件並列で読む
+  await Promise.all(
+    codes.map(async (code) => {
+      const chartNo = await getChartNoByCode(env, code);
+      if (!chartNo) return;
+      const rec = await getCard(env, chartNo);
+      if (!rec) return;
+      statuses[code] = {
+        chartNo: rec.chartNo,
+        status: effectiveStatus(rec, now),
+        issuedAt: rec.issuedAt,
+        expiresAt: rec.expiresAt,
+      };
+    }),
+  );
 
   return json({ ok: true, statuses }, { status: 200 }, req, env);
 }
