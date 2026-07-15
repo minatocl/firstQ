@@ -7,6 +7,11 @@
  */
 import { checkPasscode } from "./auth";
 import type { Env } from "./config";
+import {
+  expireGoogleObject,
+  googleConfigured,
+  patchGoogleObjectIfExists,
+} from "./google/wallet";
 import { dobHash, phoneHash } from "./hash";
 import { json } from "./http";
 import {
@@ -64,6 +69,15 @@ export async function handleIssue(req: Request, env: Env): Promise<Response> {
   if (prevChartNo && prevChartNo !== chartNo) {
     const prev = await getCard(env, prevChartNo);
     if (prev) await retireCard(env, prev);
+    // Android に保存済みの旧券は KV 削除では消えない。EXPIRED にして
+    // 旧カルテ番号の QR が受付スキャナで通らないようにする。
+    if (googleConfigured(env)) {
+      try {
+        await expireGoogleObject(env, prevChartNo);
+      } catch (e) {
+        console.error("google expire failed", prevChartNo, e);
+      }
+    }
   }
 
   const now = Date.now();
@@ -79,6 +93,17 @@ export async function handleIssue(req: Request, env: Env): Promise<Response> {
     status: "issued",
   };
   await putCard(env, rec);
+
+  // 同じカルテ番号での再発行(氏名修正など)。既に Google に保存済みなら
+  // 券面を更新する。未保存(404)なら何もしない = iPhone 患者の氏名を
+  // Google に送らない。発行が Google 障害で失敗しないよう握りつぶす。
+  if (googleConfigured(env)) {
+    try {
+      await patchGoogleObjectIfExists(env, rec);
+    } catch (e) {
+      console.error("google patch failed", chartNo, e);
+    }
+  }
 
   return json(
     {

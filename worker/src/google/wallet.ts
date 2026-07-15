@@ -9,40 +9,10 @@
  */
 import { BACK_FIELDS, PASS_LANGS, PASS_STRINGS, type Env } from "../config";
 import type { CardRecord } from "../kv";
+import { makeJwt } from "./jwt";
+import { getAccessToken } from "./oauth";
 
-const enc = new TextEncoder();
-
-function b64url(bytes: Uint8Array): string {
-  let s = "";
-  for (const b of bytes) s += String.fromCharCode(b);
-  return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-}
-const b64urlStr = (s: string) => b64url(enc.encode(s));
-
-/** PKCS#8 PEM(service account の private_key)→ DER。JSON の \n エスケープも吸収。 */
-function pkcs8Der(pem: string): Uint8Array {
-  const body = pem
-    .replace(/\\n/g, "\n")
-    .replace(/-----BEGIN [^-]+-----/, "")
-    .replace(/-----END [^-]+-----/, "")
-    .replace(/\s+/g, "");
-  const bin = atob(body);
-  const out = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
-  return out;
-}
-
-async function signRS256(privatePem: string, input: string): Promise<string> {
-  const key = await crypto.subtle.importKey(
-    "pkcs8",
-    pkcs8Der(privatePem),
-    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
-    false,
-    ["sign"],
-  );
-  const sig = await crypto.subtle.sign("RSASSA-PKCS1-v1_5", key, enc.encode(input));
-  return b64url(new Uint8Array(sig));
-}
+const WOBJ_API = "https://walletobjects.googleapis.com/walletobjects/v1";
 
 /** Google の LocalizedString(defaultValue + translatedValues) */
 function localized(byLang: Record<string, string>) {
@@ -75,11 +45,13 @@ export function googleConfigured(env: Env): boolean {
   return !!(env.GOOGLE_ISSUER_ID && env.GOOGLE_SA_EMAIL && env.GOOGLE_SA_PRIVATE_KEY);
 }
 
-/** 発行レコードから「Google Wallet に保存」URL を生成 */
-export async function buildGoogleSaveUrl(env: Env, rec: CardRecord): Promise<string> {
-  const issuerId = env.GOOGLE_ISSUER_ID!;
-  const classId = `${issuerId}.minato_card_generic`;
-  const objectId = `${issuerId}.${rec.chartNo}`;
+const classIdOf = (env: Env) => `${env.GOOGLE_ISSUER_ID}.minato_card_generic`;
+const objectIdOf = (env: Env, chartNo: string) => `${env.GOOGLE_ISSUER_ID}.${chartNo}`;
+
+/** 発行レコードから genericObject の JSON を組み立てる */
+function buildGenericObject(env: Env, rec: CardRecord) {
+  const classId = classIdOf(env);
+  const objectId = objectIdOf(env, rec.chartNo);
   const logoUri =
     env.GOOGLE_LOGO_URI || "https://minatocl.github.io/firstQ/pass-logo/google-logo.png";
 
@@ -121,21 +93,64 @@ export async function buildGoogleSaveUrl(env: Env, rec: CardRecord): Promise<str
     ],
   };
 
+  return genericObject;
+}
+
+/**
+ * 既存パスオブジェクトを最新の発行内容に更新する(存在しなければ何もしない)。
+ * PATCH が通れば、患者が既に保存済みの Android 端末の券面も自動で更新される。
+ * @returns true = 既存を更新した / false = 未作成だった
+ */
+export async function patchGoogleObjectIfExists(env: Env, rec: CardRecord): Promise<boolean> {
+  const id = objectIdOf(env, rec.chartNo);
+  const res = await fetch(`${WOBJ_API}/genericObject/${id}`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${await getAccessToken(env)}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(buildGenericObject(env, rec)),
+  });
+  if (res.status === 404) return false; // 未保存の患者。作成は保存 JWT 側に任せる
+  if (!res.ok) throw new Error(`google patch failed: ${res.status} ${await res.text()}`);
+  return true;
+}
+
+/**
+ * パスオブジェクトを失効させる(カルテ番号変更・再発行で旧券を無効化する)。
+ * KV を消すだけでは Android 端末に残った旧 QR が受付スキャナで通ってしまうため必須。
+ */
+export async function expireGoogleObject(env: Env, chartNo: string): Promise<void> {
+  const id = objectIdOf(env, chartNo);
+  const res = await fetch(`${WOBJ_API}/genericObject/${id}`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${await getAccessToken(env)}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ state: "EXPIRED" }),
+  });
+  if (res.status === 404) return; // Google に保存されたことがない
+  if (!res.ok) throw new Error(`google expire failed: ${res.status} ${await res.text()}`);
+}
+
+/** 発行レコードから「Google Wallet に保存」URL を生成 */
+export async function buildGoogleSaveUrl(env: Env, rec: CardRecord): Promise<string> {
+  // 保存 JWT は既存オブジェクトを更新しない(ペイロードが無視される)。
+  // 再保存で旧券面が出ないよう、先に PATCH で中身を最新化しておく。
+  // 未作成(404)の場合はここでは作らず、下の JWT に作らせる。
+  await patchGoogleObjectIfExists(env, rec);
+
   const claims = {
     iss: env.GOOGLE_SA_EMAIL,
     aud: "google",
     typ: "savetowallet",
     iat: Math.floor(Date.now() / 1000),
     payload: {
-      genericClasses: [{ id: classId }],
-      genericObjects: [genericObject],
+      genericClasses: [{ id: classIdOf(env) }],
+      genericObjects: [buildGenericObject(env, rec)],
     },
   };
 
-  const header = { alg: "RS256", typ: "JWT" };
-  const signingInput = `${b64urlStr(JSON.stringify(header))}.${b64urlStr(JSON.stringify(claims))}`;
-  const sig = await signRS256(env.GOOGLE_SA_PRIVATE_KEY!, signingInput);
-  const jwt = `${signingInput}.${sig}`;
-
-  return `https://pay.google.com/gp/v/save/${jwt}`;
+  return `https://pay.google.com/gp/v/save/${await makeJwt(env.GOOGLE_SA_PRIVATE_KEY!, claims)}`;
 }
