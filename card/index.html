@@ -60,8 +60,10 @@ input:focus{outline:none;border-color:var(--teal)}
 .ok-badge{width:64px;height:64px;border-radius:50%;background:var(--mint);display:flex;align-items:center;justify-content:center;margin:6px auto 14px;font-size:34px;color:var(--navy)}
 .ok-title{text-align:center;font-size:19px;font-weight:800;color:var(--navy);margin-bottom:8px}
 .ok-msg{text-align:center;font-size:14px;color:#4A6B78;margin-bottom:22px}
-.btn-wallet{display:block;width:100%;background:var(--navy);color:#fff;border:none;border-radius:14px;padding:17px;font-size:16px;font-weight:800;font-family:inherit;cursor:pointer;text-align:center}
-.btn-wallet:active{transform:scale(.98)}
+.wallet-actions{display:flex;flex-direction:column;gap:12px}
+.wallet-badge{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;background:#000;color:#fff;border:none;border-radius:13px;height:54px;padding:0 18px;font-size:16px;font-weight:700;font-family:inherit;cursor:pointer;line-height:1;-webkit-tap-highlight-color:transparent}
+.wallet-badge:active{transform:scale(.98)}
+.wallet-badge>svg{flex:0 0 auto;display:block}
 .ok-hint{text-align:center;font-size:12.5px;color:#7A93A0;margin-top:16px;line-height:1.7}
 .android-note{background:#FFF6E6;color:#8A6A1F;border:1.5px solid #F0DDA8;border-radius:14px;padding:16px 18px;font-size:14.5px;font-weight:600;line-height:1.7;text-align:center}
 
@@ -142,8 +144,7 @@ input:focus{outline:none;border-color:var(--teal)}
       <div class="ok-badge">✓</div>
       <p class="ok-title" data-t="successTitle"></p>
       <p class="ok-msg" id="done-msg"></p>
-      <button class="btn-wallet" id="btn-add" data-t="addBtn"></button>
-      <p class="android-note" id="android-note" style="display:none"></p>
+      <div class="wallet-actions" id="wallet-actions"></div>
 
       <div class="use-guide">
         <svg class="use-illo" viewBox="0 0 280 168" role="img" aria-labelledby="illo-title">
@@ -250,17 +251,25 @@ function getDob(){
   return `${y}-${m}-${d}`;
 }
 
-/* 端末判定(iOS=Apple Wallet / Android=Google Wallet 出し分け)と Google 設定状況 */
-const PLATFORM = new URLSearchParams(location.search).get("platform") || (function(){
+/* 端末判定 → どのウォレットを出すか: 'apple' | 'google' | 'both'
+   iOS/iPadOS/macOS Safari=Apple、Android=Google、判定不能/PC=両方(選ばせる)。
+   ?platform=apple|google|both|ios|android|other で強制上書き可(検証用)。 */
+const WALLET_TARGET = (function(){
+  const f = new URLSearchParams(location.search).get("platform");
+  if (f === "apple" || f === "ios") return "apple";
+  if (f === "google" || f === "android") return "google";
+  if (f === "both" || f === "other" || f === "pc") return "both";
   const ua = navigator.userAgent || "";
-  if (/android/i.test(ua)) return "android";
-  if (/iphone|ipad|ipod/i.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)) return "ios";
-  return "other";
+  const isAndroid = /android/i.test(ua);
+  // iPadOS 13+ は Mac を名乗るのでタッチ有無で判定
+  const isIOS = /iphone|ipad|ipod/i.test(ua)
+    || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  // Mac の Safari は pkpass を Wallet に追加可(iPhone に同期)。Chrome 等は除外
+  const isMacSafari = /Macintosh/.test(ua) && /Safari/.test(ua) && !/Chrome|Chromium|Edg|OPR/.test(ua);
+  if (isAndroid) return "google";
+  if (isIOS || isMacSafari) return "apple";
+  return "both"; // Windows/Linux/判定不能 → 両方提示(Google はPCでもアカウントに保存され端末に同期)
 })();
-let GOOGLE_READY = false;
-async function loadGoogleReady(){
-  try { const h = await (await fetch(CARD_API + "/api/card/health")).json(); GOOGLE_READY = (h.google === "configured"); } catch(_) {}
-}
 const WALLET_I18N = {
   ja:{gAddBtn:"Google Wallet に追加", androidSoon:"Android(Google Wallet)対応は準備中です。受付でカルテ番号をお伝えください。"},
   en:{gAddBtn:"Add to Google Wallet", androidSoon:"Android (Google Wallet) support is coming soon. Please tell reception your patient ID."},
@@ -309,23 +318,30 @@ async function callVerify(body){
   return { status:r.status, data: await r.json() };
 }
 
-function goWallet(token){
-  const btn = $("btn-add"), anote = $("android-note"), guide = document.querySelector(".use-guide");
-  // Android かつ Google 未設定 → 追加ボタンは出さず案内のみ
-  if (PLATFORM === "android" && !GOOGLE_READY) {
-    btn.style.display = "none"; guide.style.display = "none"; $("done-msg").style.display = "none";
-    anote.textContent = wlab("androidSoon"); anote.style.display = "block";
-    show("scr-done"); return;
-  }
-  // 追加できる状態: iOS/その他=Apple、Android(Google設定済)=Google
-  const google = (PLATFORM === "android" && GOOGLE_READY);
-  const name = google ? "Google Wallet" : "Apple Wallet";
-  btn.style.display = ""; guide.style.display = ""; $("done-msg").style.display = ""; anote.style.display = "none";
-  btn.textContent = google ? wlab("gAddBtn") : t("addBtn");
-  const path = google ? "/api/card/google/" : "/api/card/pass/";
+/* 公式バッジ風の各社ロゴ(自己完結の inline SVG)。白抜きで黒バッジに載る。 */
+const APPLE_LOGO = '<svg width="19" height="23" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M17.05 12.04c-.03-2.9 2.37-4.3 2.48-4.36-1.35-1.98-3.46-2.25-4.21-2.28-1.79-.18-3.5 1.05-4.41 1.05-.9 0-2.31-1.03-3.8-1-1.96.03-3.77 1.14-4.78 2.9-2.04 3.54-.52 8.78 1.46 11.65.97 1.4 2.13 2.98 3.65 2.92 1.46-.06 2.01-.95 3.78-.95 1.76 0 2.26.95 3.81.92 1.57-.03 2.57-1.43 3.53-2.84 1.11-1.63 1.57-3.21 1.6-3.29-.03-.02-3.07-1.18-3.1-4.67zM14.13 5.15c.81-.98 1.35-2.34 1.2-3.7-1.16.05-2.57.78-3.4 1.76-.75.87-1.4 2.25-1.23 3.58 1.29.1 2.62-.66 3.43-1.64z"/></svg>';
+const GOOGLE_LOGO = '<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="6" fill="#fff"/><g transform="translate(12,12)"><rect x="-8" y="-2.6" width="16" height="5.2" rx="2.6" fill="#34A853" transform="rotate(39)"/><rect x="-8" y="-2.6" width="16" height="5.2" rx="2.6" fill="#FBBC04" transform="rotate(13)"/><rect x="-8" y="-2.6" width="16" height="5.2" rx="2.6" fill="#EA4335" transform="rotate(-13)"/><rect x="-8" y="-2.6" width="16" height="5.2" rx="2.6" fill="#4285F4" transform="rotate(-39)"/></g></svg>';
+
+function walletBadge(kind, token){
+  const b = document.createElement("button");
+  b.className = "wallet-badge " + kind;
+  const isG = kind === "google";
+  b.innerHTML = (isG ? GOOGLE_LOGO : APPLE_LOGO)
+    + '<span class="btxt">' + (isG ? wlab("gAddBtn") : t("addBtn")) + '</span>';
+  const path = isG ? "/api/card/google/" : "/api/card/pass/";
   // ユーザー操作(タップ)後にトップレベル遷移 → Wallet 追加画面を開く
-  btn.onclick = ()=>{ window.location.href = CARD_API + path + encodeURIComponent(token); };
-  // ブランド名を各言語の文中("Apple Wallet")から置換
+  b.onclick = ()=>{ window.location.href = CARD_API + path + encodeURIComponent(token); };
+  return b;
+}
+
+function goWallet(token){
+  const wrap = $("wallet-actions");
+  wrap.innerHTML = "";
+  if (WALLET_TARGET !== "google") wrap.appendChild(walletBadge("apple", token));
+  if (WALLET_TARGET !== "apple")  wrap.appendChild(walletBadge("google", token));
+  // 文中のブランド名を対象に合わせて置換
+  const name = WALLET_TARGET === "google" ? "Google Wallet"
+    : WALLET_TARGET === "apple" ? "Apple Wallet" : "Apple Wallet / Google Wallet";
   $("done-msg").textContent = t("successMsg").replace(/Apple Wallet/g, name);
   $("use-step").textContent = uguide().step.replace(/Apple Wallet/g, name);
   show("scr-done");
@@ -364,7 +380,6 @@ function renderCandidates(candidates, phone, dob){
 $("btn-verify").addEventListener("click",()=>{ clearErr(); doVerify(); });
 
 applyI18n();
-loadGoogleReady();
 </script>
 </body>
 </html>
