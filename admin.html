@@ -582,7 +582,12 @@ $("mi-issue").addEventListener("click", async ()=>{
   }catch(_){ err.textContent="通信エラー。ネットワークをご確認ください。"; err.style.display="block"; }
   finally{ btn.disabled=false; btn.textContent="発行する"; }
 });
-setInterval(()=>{ if($("panel").style.display==="block" && !DEMO) load(); },30000);
+// 自動更新: 90秒間隔。タブが非表示のときはポーリングしない(KV/API負荷を抑制)。
+// タブが再び表示になった瞬間は即時更新して、待たせずに最新化する。
+setInterval(()=>{ if($("panel").style.display==="block" && !DEMO && !document.hidden) load(); },90000);
+document.addEventListener("visibilitychange",()=>{
+  if(!document.hidden && $("panel").style.display==="block" && !DEMO) load();
+});
 
 /* デモモード: ?demo=1 でログインなしにサンプル患者で発行UIを確認できる。
    本番Workerには一切接続しない。?pass=xxxx を付ければ発行ボタンは
