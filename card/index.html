@@ -16,14 +16,14 @@
 body{
   font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue","Hiragino Kaku Gothic ProN","Noto Sans JP","Noto Sans Thai","Noto Sans SC",sans-serif;
   background:linear-gradient(180deg,var(--bg-top) 0%,var(--bg-bottom) 100%);
-  min-height:100vh;color:var(--ink);font-size:16px;line-height:1.6;
+  min-height:100vh;color:var(--ink);font-size:17px;line-height:1.65;
 }
 .wrap{max-width:520px;margin:0 auto;padding:0 18px 60px}
 .hero{background:var(--navy);border-radius:0 0 24px 24px;padding:30px 20px 26px;text-align:center;box-shadow:0 4px 18px rgba(38,32,85,.18)}
 .hero img{width:min(220px,64%);height:auto}
 .hero .sub{color:var(--mint);font-size:12px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;margin-top:12px}
 .h1{text-align:center;font-size:20px;font-weight:800;color:var(--navy);margin:24px 0 6px}
-.lead{text-align:center;font-size:13.5px;color:#4A6B78;margin-bottom:22px}
+.lead{text-align:center;font-size:15px;color:#3F5F6C;margin-bottom:22px}
 
 .screen{display:none;animation:fadein .35s ease}
 .screen.active{display:block}
@@ -57,14 +57,38 @@ input:focus{outline:none;border-color:var(--teal)}
 .cand:active{border-color:var(--teal);background:var(--teal-soft)}
 
 /* success */
-.ok-badge{width:64px;height:64px;border-radius:50%;background:var(--mint);display:flex;align-items:center;justify-content:center;margin:6px auto 14px;font-size:34px;color:var(--navy)}
-.ok-title{text-align:center;font-size:19px;font-weight:800;color:var(--navy);margin-bottom:8px}
-.ok-msg{text-align:center;font-size:14px;color:#4A6B78;margin-bottom:22px}
-.wallet-actions{display:flex;flex-direction:column;gap:12px}
-.wallet-badge{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;background:#000;color:#fff;border:none;border-radius:13px;height:54px;padding:0 18px;font-size:16px;font-weight:700;font-family:inherit;cursor:pointer;line-height:1;-webkit-tap-highlight-color:transparent}
+.ok-badge{width:68px;height:68px;border-radius:50%;background:var(--mint);display:flex;align-items:center;justify-content:center;margin:6px auto 14px;font-size:36px;color:var(--navy)}
+.ok-title{text-align:center;font-size:22px;font-weight:800;color:var(--navy);margin-bottom:10px}
+.ok-msg{text-align:center;font-size:16px;color:#3F5F6C;margin-bottom:8px;line-height:1.7}
+/* Wallet 追加ボタンの上の、やさしい大きな案内 */
+.tap-hint{text-align:center;font-size:19px;font-weight:800;color:var(--navy);line-height:1.55;margin:14px 4px 16px;text-wrap:balance}
+.tap-hint .arrow{display:block;font-size:22px;color:var(--teal);margin-top:6px;animation:tapbob 1.4s ease-in-out infinite}
+@keyframes tapbob{0%,100%{transform:translateY(0)}50%{transform:translateY(5px)}}
+@media (prefers-reduced-motion: reduce){.tap-hint .arrow{animation:none}}
+.wallet-actions{display:flex;flex-direction:column;gap:14px;align-items:center}
+/* 公式バッジ画像(各社の公式ローカライズ SVG を wallet-badges/ に置く) */
+.wallet-badge-btn{background:none;border:none;padding:0;cursor:pointer;display:block;width:100%;-webkit-tap-highlight-color:transparent}
+.wallet-badge-btn:active{transform:scale(.98)}
+.wallet-badge-img{display:block;height:60px;width:auto;max-width:100%;margin:0 auto}
+/* フォールバック(公式アセット未配置時のみ)。黒バッジ+ロゴ+文言 */
+.wallet-badge{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;max-width:320px;background:#000;color:#fff;border:none;border-radius:13px;height:56px;padding:0 18px;font-size:17px;font-weight:700;font-family:inherit;cursor:pointer;line-height:1;-webkit-tap-highlight-color:transparent}
 .wallet-badge:active{transform:scale(.98)}
 .wallet-badge>svg{flex:0 0 auto;display:block}
-.ok-hint{text-align:center;font-size:12.5px;color:#7A93A0;margin-top:16px;line-height:1.7}
+.ok-hint{text-align:center;font-size:13.5px;color:#6D8894;margin-top:16px;line-height:1.7}
+
+/* 追加した診察券の出し方(端末別・成功画面の下部) */
+.open-guide{margin-top:26px;background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:20px 18px 22px;box-shadow:0 2px 12px rgba(38,32,85,.06)}
+.open-guide h2{font-size:18px;font-weight:800;color:var(--navy);text-align:center;margin-bottom:4px}
+.open-guide .og-sub{font-size:13.5px;color:#6D8894;text-align:center;margin-bottom:16px}
+.og-block{margin-top:14px}
+.og-block:first-of-type{margin-top:0}
+.og-dev{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:800;color:var(--teal-dark);margin-bottom:10px}
+.og-dev svg{flex:0 0 auto}
+.og-step{display:flex;gap:12px;align-items:flex-start;margin-bottom:11px}
+.og-step:last-child{margin-bottom:0}
+.og-no{flex:0 0 auto;width:28px;height:28px;border-radius:50%;background:var(--navy);color:#fff;font-weight:800;font-size:15px;display:flex;align-items:center;justify-content:center}
+.og-tx{font-size:15.5px;color:#2C4A55;line-height:1.6;font-weight:600;padding-top:2px}
+.og-divider{height:1px;background:var(--line);margin:18px 0}
 .android-note{background:#FFF6E6;color:#8A6A1F;border:1.5px solid #F0DDA8;border-radius:14px;padding:16px 18px;font-size:14.5px;font-weight:600;line-height:1.7;text-align:center}
 
 /* 次回の使い方(アニメ付き) */
@@ -144,7 +168,11 @@ input:focus{outline:none;border-color:var(--teal)}
       <div class="ok-badge">✓</div>
       <p class="ok-title" data-t="successTitle"></p>
       <p class="ok-msg" id="done-msg"></p>
+      <p class="tap-hint" id="tap-hint"></p>
       <div class="wallet-actions" id="wallet-actions"></div>
+
+      <!-- 追加した診察券の出し方(端末別) -->
+      <div class="open-guide" id="open-guide"></div>
 
       <div class="use-guide">
         <svg class="use-illo" viewBox="0 0 280 168" role="img" aria-labelledby="illo-title">
@@ -234,6 +262,45 @@ const USE_GUIDE = {
 };
 const uguide = () => USE_GUIDE[LANG] || USE_GUIDE.ja;
 
+/* Wallet 追加ボタンの上の、やさしい大きな案内(高齢の方も対象) */
+const TAP_HINT = {
+  ja:"下のボタンを押すと、スマホに診察券が入ります",
+  en:"Tap the button below to add the card to your phone",
+  zh:"点击下方按钮，即可把诊察券存入手机",
+  pt:"Toque no botão abaixo para adicionar o cartão ao seu celular",
+  es:"Toque el botón de abajo para añadir la tarjeta a su móvil",
+  th:"แตะปุ่มด้านล่างเพื่อเพิ่มบัตรลงในโทรศัพท์ของท่าน"
+};
+const tapHint = () => TAP_HINT[LANG] || TAP_HINT.ja;
+
+/* 追加した診察券の出し方(端末別・成功画面の下部)。Wallet を知らない前提でやさしく。 */
+const OPEN_GUIDE = {
+  ja:{ title:"追加した診察券の出し方", sub:"受付では、この診察券のQRコードを見せます",
+    iosLabel:"iPhone をお使いの方", androidLabel:"Android をお使いの方",
+    ios:["ホーム画面で「ウォレット」アプリを開きます","みなとクリニックの診察券をタップします","大きなQRコードが出ます(サイドボタンを2回すばやく押すと、すぐに開けます)"],
+    android:["「Google ウォレット」アプリを開きます","みなとクリニックの診察券をタップします","QRコードが出ます"] },
+  en:{ title:"How to show your added card", sub:"At reception, show the QR code of this card",
+    iosLabel:"If you use an iPhone", androidLabel:"If you use Android",
+    ios:["Open the \"Wallet\" app on your home screen","Tap the Minato Clinic card","A large QR code appears (double-click the side button to open it quickly)"],
+    android:["Open the \"Google Wallet\" app","Tap the Minato Clinic card","A QR code appears"] },
+  zh:{ title:"如何出示已添加的诊察券", sub:"在前台出示这张诊察券的二维码",
+    iosLabel:"使用 iPhone 的患者", androidLabel:"使用 Android 的患者",
+    ios:["在主屏幕打开“钱包(Wallet)”应用","点击港诊所的诊察券","会显示大二维码(快速按两下侧边按钮可立即打开)"],
+    android:["打开“Google 钱包”应用","点击港诊所的诊察券","会显示二维码"] },
+  pt:{ title:"Como mostrar o cartão adicionado", sub:"Na recepção, mostre o QR code deste cartão",
+    iosLabel:"Se você usa iPhone", androidLabel:"Se você usa Android",
+    ios:["Abra o app \"Wallet\" na tela inicial","Toque no cartão da Minato Clinic","Um QR code grande aparece (pressione 2× o botão lateral para abrir rápido)"],
+    android:["Abra o app \"Google Wallet\"","Toque no cartão da Minato Clinic","Um QR code aparece"] },
+  es:{ title:"Cómo mostrar la tarjeta añadida", sub:"En recepción, muestre el código QR de esta tarjeta",
+    iosLabel:"Si usa iPhone", androidLabel:"Si usa Android",
+    ios:["Abra la app \"Wallet\" en la pantalla de inicio","Toque la tarjeta de Minato Clinic","Aparece un código QR grande (pulse 2× el botón lateral para abrirlo rápido)"],
+    android:["Abra la app \"Google Wallet\"","Toque la tarjeta de Minato Clinic","Aparece un código QR"] },
+  th:{ title:"วิธีแสดงบัตรที่เพิ่มไว้", sub:"ที่แผนกต้อนรับ ให้แสดง QR code ของบัตรนี้",
+    iosLabel:"ผู้ที่ใช้ iPhone", androidLabel:"ผู้ที่ใช้ Android",
+    ios:["เปิดแอป \"Wallet\" ที่หน้าจอหลัก","แตะบัตรของมินาโตะคลินิก","จะมี QR code ขนาดใหญ่ปรากฏ (กดปุ่มด้านข้าง 2 ครั้งเพื่อเปิดเร็ว)"],
+    android:["เปิดแอป \"Google Wallet\"","แตะบัตรของมินาโตะคลินิก","จะมี QR code ปรากฏ"] }
+};
+
 function fillDobSelects(){
   const y=$("dob-y"),m=$("dob-m"),d=$("dob-d");
   const yPrev=y.value,mPrev=m.value,dPrev=d.value;
@@ -322,16 +389,72 @@ async function callVerify(body){
 const APPLE_LOGO = '<svg width="19" height="23" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M17.05 12.04c-.03-2.9 2.37-4.3 2.48-4.36-1.35-1.98-3.46-2.25-4.21-2.28-1.79-.18-3.5 1.05-4.41 1.05-.9 0-2.31-1.03-3.8-1-1.96.03-3.77 1.14-4.78 2.9-2.04 3.54-.52 8.78 1.46 11.65.97 1.4 2.13 2.98 3.65 2.92 1.46-.06 2.01-.95 3.78-.95 1.76 0 2.26.95 3.81.92 1.57-.03 2.57-1.43 3.53-2.84 1.11-1.63 1.57-3.21 1.6-3.29-.03-.02-3.07-1.18-3.1-4.67zM14.13 5.15c.81-.98 1.35-2.34 1.2-3.7-1.16.05-2.57.78-3.4 1.76-.75.87-1.4 2.25-1.23 3.58 1.29.1 2.62-.66 3.43-1.64z"/></svg>';
 const GOOGLE_LOGO = '<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="6" fill="#fff"/><g transform="translate(12,12)"><rect x="-8" y="-2.6" width="16" height="5.2" rx="2.6" fill="#34A853" transform="rotate(39)"/><rect x="-8" y="-2.6" width="16" height="5.2" rx="2.6" fill="#FBBC04" transform="rotate(13)"/><rect x="-8" y="-2.6" width="16" height="5.2" rx="2.6" fill="#EA4335" transform="rotate(-13)"/><rect x="-8" y="-2.6" width="16" height="5.2" rx="2.6" fill="#4285F4" transform="rotate(-39)"/></g></svg>';
 
-function walletBadge(kind, token){
-  const b = document.createElement("button");
+/* 端末別「出し方」見出しの小アイコン(自前・ロゴではなく装飾) */
+const APPLE_MARK = '<svg width="15" height="18" viewBox="0 0 24 24" fill="#0B4A61" aria-hidden="true"><path d="M17.05 12.04c-.03-2.9 2.37-4.3 2.48-4.36-1.35-1.98-3.46-2.25-4.21-2.28-1.79-.18-3.5 1.05-4.41 1.05-.9 0-2.31-1.03-3.8-1-1.96.03-3.77 1.14-4.78 2.9-2.04 3.54-.52 8.78 1.46 11.65.97 1.4 2.13 2.98 3.65 2.92 1.46-.06 2.01-.95 3.78-.95 1.76 0 2.26.95 3.81.92 1.57-.03 2.57-1.43 3.53-2.84 1.11-1.63 1.57-3.21 1.6-3.29-.03-.02-3.07-1.18-3.1-4.67zM14.13 5.15c.81-.98 1.35-2.34 1.2-3.7-1.16.05-2.57.78-3.4 1.76-.75.87-1.4 2.25-1.23 3.58 1.29.1 2.62-.66 3.43-1.64z"/></svg>';
+const ANDROID_MARK = '<svg width="18" height="18" viewBox="0 0 24 24" fill="#3DDC84" aria-hidden="true"><path d="M6 10.5v6A1.5 1.5 0 0 0 7.5 18H8v2.2a1 1 0 0 0 2 0V18h4v2.2a1 1 0 0 0 2 0V18h.5a1.5 1.5 0 0 0 1.5-1.5v-6H6zM4 10.5a1.5 1.5 0 0 0-1.5 1.5v3.8a1.5 1.5 0 0 0 3 0V12A1.5 1.5 0 0 0 4 10.5zm16 0a1.5 1.5 0 0 0-1.5 1.5v3.8a1.5 1.5 0 0 0 3 0V12A1.5 1.5 0 0 0 20 10.5zM15.6 5.1l1-1.6a.3.3 0 1 0-.52-.3l-1 1.72a6 6 0 0 0-4.96 0l-1-1.72a.3.3 0 1 0-.52.3l1 1.6A5.4 5.4 0 0 0 6.5 9.5h11a5.4 5.4 0 0 0-1.9-4.4zM9.6 7.6a.65.65 0 1 1 0-1.3.65.65 0 0 1 0 1.3zm4.8 0a.65.65 0 1 1 0-1.3.65.65 0 0 1 0 1.3z"/></svg>';
+
+const BADGE_LANGS = ["ja","en","zh","pt","es","th"];
+/* 公式アセット未配置時のフォールバック(黒バッジ+ロゴ+文言) */
+function fallbackBadge(kind){
+  const b = document.createElement("span");
   b.className = "wallet-badge " + kind;
   const isG = kind === "google";
   b.innerHTML = (isG ? GOOGLE_LOGO : APPLE_LOGO)
     + '<span class="btxt">' + (isG ? wlab("gAddBtn") : t("addBtn")) + '</span>';
-  const path = isG ? "/api/card/google/" : "/api/card/pass/";
-  // ユーザー操作(タップ)後にトップレベル遷移 → Wallet 追加画面を開く
-  b.onclick = ()=>{ window.location.href = CARD_API + path + encodeURIComponent(token); };
   return b;
+}
+/* 各社の公式ローカライズ badge SVG(wallet-badges/{kind}-{lang}.svg)を表示。
+   言語別が無ければ英語 → それも無ければ自前バッジにフォールバック。 */
+function walletBadge(kind, token){
+  const btn = document.createElement("button");
+  btn.className = "wallet-badge-btn";
+  const label = kind === "google" ? wlab("gAddBtn") : t("addBtn");
+  btn.setAttribute("aria-label", label);
+  const img = document.createElement("img");
+  img.className = "wallet-badge-img";
+  img.alt = label;
+  const lang = BADGE_LANGS.includes(LANG) ? LANG : "en";
+  img.src = "wallet-badges/" + kind + "-" + lang + ".svg";
+  img.onerror = function(){
+    if (img.dataset.step !== "en" && lang !== "en") {
+      img.dataset.step = "en"; img.src = "wallet-badges/" + kind + "-en.svg"; return;
+    }
+    btn.replaceChildren(fallbackBadge(kind)); // 公式アセット未配置 → 自前バッジ
+  };
+  btn.appendChild(img);
+  const path = kind === "google" ? "/api/card/google/" : "/api/card/pass/";
+  // ユーザー操作(タップ)後にトップレベル遷移 → Wallet 追加画面を開く
+  btn.onclick = ()=>{ window.location.href = CARD_API + path + encodeURIComponent(token); };
+  return btn;
+}
+
+/* WALLET_TARGET に応じた端末ブロック: apple→ios / google→android / both→両方 */
+function deviceKinds(){
+  const ds = [];
+  if (WALLET_TARGET !== "google") ds.push("ios");
+  if (WALLET_TARGET !== "apple")  ds.push("android");
+  return ds;
+}
+function renderOpenGuide(){
+  const og = OPEN_GUIDE[LANG] || OPEN_GUIDE.ja;
+  const host = $("open-guide"); host.innerHTML = "";
+  const h = document.createElement("h2"); h.textContent = og.title; host.appendChild(h);
+  const sub = document.createElement("p"); sub.className = "og-sub"; sub.textContent = og.sub; host.appendChild(sub);
+  deviceKinds().forEach((dev, i)=>{
+    if (i > 0){ const d = document.createElement("div"); d.className = "og-divider"; host.appendChild(d); }
+    const blk = document.createElement("div"); blk.className = "og-block";
+    const lab = document.createElement("div"); lab.className = "og-dev";
+    lab.innerHTML = (dev === "ios" ? APPLE_MARK : ANDROID_MARK)
+      + "<span>" + (dev === "ios" ? og.iosLabel : og.androidLabel) + "</span>";
+    blk.appendChild(lab);
+    (dev === "ios" ? og.ios : og.android).forEach((s, idx)=>{
+      const st = document.createElement("div"); st.className = "og-step";
+      const no = document.createElement("div"); no.className = "og-no"; no.textContent = idx + 1;
+      const tx = document.createElement("div"); tx.className = "og-tx"; tx.textContent = s;
+      st.appendChild(no); st.appendChild(tx); blk.appendChild(st);
+    });
+    host.appendChild(blk);
+  });
 }
 
 function goWallet(token){
@@ -343,7 +466,12 @@ function goWallet(token){
   const name = WALLET_TARGET === "google" ? "Google Wallet"
     : WALLET_TARGET === "apple" ? "Apple Wallet" : "Apple Wallet / Google Wallet";
   $("done-msg").textContent = t("successMsg").replace(/Apple Wallet/g, name);
+  // ボタン上のやさしい案内 + 下向き矢印
+  const th = $("tap-hint"); th.textContent = tapHint();
+  const ar = document.createElement("span"); ar.className = "arrow"; ar.setAttribute("aria-hidden","true"); ar.textContent = "▼";
+  th.appendChild(ar);
   $("use-step").textContent = uguide().step.replace(/Apple Wallet/g, name);
+  renderOpenGuide();
   show("scr-done");
 }
 

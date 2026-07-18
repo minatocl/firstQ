@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="robots" content="noindex">
+<title>電子診察券の発行申し込み | みなとクリニック</title>
+<style>
+:root{
+  --teal:#2286A5;--teal-dark:#0B4A61;--teal-soft:#D9EEF5;
+  --navy:#262055;--mint:#9FE1CB;
+  --bg-top:#F4FBFE;--bg-bottom:#E2F1F8;
+  --ink:#12303B;--card:#FFFFFF;--line:#C5E0EB;--radius:18px;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue","Hiragino Kaku Gothic ProN","Noto Sans JP","Noto Sans Thai","Noto Sans SC",sans-serif;
+  background:linear-gradient(180deg,var(--bg-top) 0%,var(--bg-bottom) 100%);
+  min-height:100vh;color:var(--ink);font-size:17px;line-height:1.7;
+}
+.wrap{max-width:520px;margin:0 auto;padding:0 18px 60px}
+.hero{background:var(--navy);border-radius:0 0 24px 24px;padding:30px 20px 26px;text-align:center;box-shadow:0 4px 18px rgba(38,32,85,.18)}
+.hero img{width:min(220px,64%);height:auto}
+.hero .sub{color:var(--mint);font-size:12px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;margin-top:12px}
+.h1{text-align:center;font-size:22px;font-weight:800;color:var(--navy);margin:24px 0 8px}
+.lead{text-align:center;font-size:15px;color:#3F5F6C;margin-bottom:22px}
+
+.screen{display:none;animation:fadein .35s ease}
+.screen.active{display:block}
+@keyframes fadein{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+.lang-title{text-align:center;font-size:18px;font-weight:700;color:var(--teal-dark);margin:26px 0 18px}
+.lang-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.lang-btn{background:var(--card);border:2px solid var(--line);border-radius:var(--radius);padding:22px 10px;font-size:18px;font-weight:700;color:var(--teal-dark);cursor:pointer;transition:.15s;text-align:center;font-family:inherit}
+.lang-btn small{display:block;font-size:11px;font-weight:500;color:var(--teal);margin-top:3px}
+.lang-btn:active{transform:scale(.97);border-color:var(--teal);background:var(--teal-soft)}
+
+.section{background:var(--card);border-radius:var(--radius);padding:20px 18px;margin-bottom:16px;box-shadow:0 2px 10px rgba(34,134,165,.07)}
+label.f{display:block;font-size:15px;font-weight:800;color:var(--teal-dark);margin-bottom:8px}
+input[type=text],input[type=tel]{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:15px;font-size:17px;font-family:inherit;color:var(--ink);background:#fff}
+input:focus,select:focus{outline:none;border-color:var(--teal)}
+.dob-row{display:flex;gap:8px}
+.dob-row select{flex:1;border:1.5px solid var(--line);border-radius:12px;padding:15px 8px;font-size:17px;font-family:inherit;background:#F7FCFE;color:var(--ink);-webkit-appearance:none;appearance:none;text-align:center}
+.dob-row select:focus{background:#fff}
+.gap{margin-bottom:18px}
+.gap:last-child{margin-bottom:0}
+.hint{font-size:13px;color:#6D8894;margin-top:6px;font-weight:600}
+.btn{display:block;width:100%;border:none;border-radius:14px;padding:18px;font-size:18px;font-weight:800;font-family:inherit;cursor:pointer;transition:.12s}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:var(--teal);color:#fff}
+.btn-primary:disabled{opacity:.6}
+.btn-back{background:none;border:none;color:var(--teal);font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;display:block;margin:16px auto 0;padding:8px}
+.err{background:#FDECEC;color:#A62C2C;border-radius:12px;padding:13px 15px;font-size:15px;font-weight:700;margin-bottom:16px;display:none}
+.spinner{display:inline-block;width:16px;height:16px;border:2.5px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:-2px;margin-right:8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* done */
+.ok-badge{width:72px;height:72px;border-radius:50%;background:var(--mint);display:flex;align-items:center;justify-content:center;margin:8px auto 16px;font-size:38px;color:var(--navy)}
+.ok-title{text-align:center;font-size:22px;font-weight:800;color:var(--navy);margin-bottom:12px}
+.ok-msg{text-align:center;font-size:16px;color:#3F5F6C;margin-bottom:22px;line-height:1.8}
+.steps{background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:20px 18px;box-shadow:0 2px 12px rgba(38,32,85,.06)}
+.step{display:flex;gap:14px;align-items:flex-start;margin-bottom:16px}
+.step:last-child{margin-bottom:0}
+.step-no{flex:0 0 auto;width:30px;height:30px;border-radius:50%;background:var(--navy);color:#fff;font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:center}
+.step-tx{font-size:15.5px;color:#2C4A55;line-height:1.65;font-weight:600}
+.btn-receive{margin-top:22px;background:var(--navy);color:#fff}
+</style>
+</head>
+<body>
+  <div class="hero">
+    <img src="../pass-logo/logo@2x.png" alt="みなとクリニック">
+    <div class="sub" id="hero-sub">Digital Patient Card</div>
+  </div>
+  <div class="wrap">
+
+    <!-- STEP 1: language -->
+    <div class="screen active" id="scr-lang">
+      <p class="lang-title">言語を選んでください<br><span style="font-size:14px;font-weight:600;color:#3F5F6C">Please select your language</span></p>
+      <div class="lang-grid">
+        <button class="lang-btn" data-lang="ja">日本語</button>
+        <button class="lang-btn" data-lang="en">English</button>
+        <button class="lang-btn" data-lang="zh">中文<small>简体</small></button>
+        <button class="lang-btn" data-lang="pt">Português</button>
+        <button class="lang-btn" data-lang="th">ไทย</button>
+        <button class="lang-btn" data-lang="es">Español</button>
+      </div>
+    </div>
+
+    <!-- STEP 2: form -->
+    <div class="screen" id="scr-form">
+      <h1 class="h1" data-t="pageTitle"></h1>
+      <p class="lead" data-t="intro"></p>
+      <div class="err" id="form-err"></div>
+      <div class="section">
+        <div class="gap">
+          <label class="f" data-t="name"></label>
+          <input type="text" id="name" autocomplete="name">
+          <div class="hint" data-t="nameHint"></div>
+        </div>
+        <div class="gap" id="kana-wrap">
+          <label class="f" data-t="kana"></label>
+          <input type="text" id="kana" autocomplete="off">
+        </div>
+        <div class="gap">
+          <label class="f" data-t="phone"></label>
+          <input type="tel" id="phone" inputmode="tel" autocomplete="tel">
+          <div class="hint" data-t="phoneHint"></div>
+        </div>
+        <div>
+          <label class="f" data-t="dob"></label>
+          <div class="dob-row">
+            <select id="dob-y" aria-label="year"></select>
+            <select id="dob-m" aria-label="month"></select>
+            <select id="dob-d" aria-label="day"></select>
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-primary" id="btn-submit"><span data-t="submit"></span></button>
+      <button class="btn-back" id="btn-back" data-t="back"></button>
+    </div>
+
+    <!-- STEP 3: done -->
+    <div class="screen" id="scr-done">
+      <div class="ok-badge">✓</div>
+      <p class="ok-title" data-t="doneTitle"></p>
+      <p class="ok-msg" id="done-msg"></p>
+      <div class="steps">
+        <div class="step"><div class="step-no">1</div><div class="step-tx" data-t="doneStep1"></div></div>
+        <div class="step"><div class="step-no">2</div><div class="step-tx" data-t="doneStep2"></div></div>
+        <div class="step"><div class="step-no">3</div><div class="step-tx" data-t="doneStep3"></div></div>
+      </div>
+      <button class="btn btn-receive" id="btn-receive" data-t="receiveBtn"></button>
+    </div>
+
+  </div>
+
+<script>
+/* ================= CONFIG ================= */
+/* 問診受け口 Worker(minato-monshin)。動作確認用に ?api=... で上書き可能。 */
+const SUBMIT_API = new URLSearchParams(location.search).get("api")
+  || "https://minato-monshin.minato-monshin.workers.dev";
+/* 受け取りページ(同フォルダの index.html)。?rcv=... で上書き可能。 */
+const RECEIVE_URL = new URLSearchParams(location.search).get("rcv") || "./";
+/* ========================================== */
+
+const I18N = {
+  ja:{
+    pageTitle:"電子診察券の発行申し込み",
+    intro:"当院の診察券をお持ちの方が、スマホの電子診察券をお受け取りになるための申し込みです。ご記入いただいた電話番号・生年月日は、受け取りのときの本人確認に使います。",
+    name:"お名前", nameHint:"保険証と同じ表記でご記入ください。",
+    kana:"フリガナ",
+    phone:"電話番号", phoneHint:"今お使いの番号をご記入ください。",
+    dob:"生年月日", submit:"この内容で申し込む", back:"← 言語選択にもどる",
+    doneTitle:"お申し込みを受け付けました",
+    doneMsg:"受付が確認して番号を登録します。しばらくお待ちください。",
+    doneStep1:"受付で診察券番号の登録が終わるまで、少しお待ちください。",
+    doneStep2:"登録が終わったら、下のボタンから受け取りページを開きます。",
+    doneStep3:"電話番号と生年月日を入力すると、電子診察券をお受け取りいただけます。",
+    receiveBtn:"受け取りページへ進む",
+    errReq:"お名前・電話番号・生年月日をすべてご入力ください。",
+    errNet:"通信に失敗しました。電波の良い場所でもう一度お試しください。"
+  },
+  en:{
+    pageTitle:"Apply for a Digital Patient Card",
+    intro:"For existing patients to receive a digital patient card on their phone. The phone number and date of birth you enter are used to verify your identity when you receive the card.",
+    name:"Full name", nameHint:"Please enter it as shown on your insurance card.",
+    kana:"Name (kana)",
+    phone:"Phone number", phoneHint:"Please enter the number you use now.",
+    dob:"Date of birth", submit:"Submit application", back:"← Back to language selection",
+    doneTitle:"Your application has been received",
+    doneMsg:"Reception will check it and register your number. Please wait a moment.",
+    doneStep1:"Please wait a little while reception registers your patient card number.",
+    doneStep2:"Once registered, open the receive page with the button below.",
+    doneStep3:"Enter your phone number and date of birth to receive your digital card.",
+    receiveBtn:"Go to the receive page",
+    errReq:"Please enter your name, phone number and date of birth.",
+    errNet:"Connection failed. Please try again where the signal is better."
+  },
+  zh:{
+    pageTitle:"电子诊察券发行申请",
+    intro:"供已持有本院诊察券的患者在手机上领取电子诊察券。您填写的电话号码和出生日期将用于领取时的身份确认。",
+    name:"姓名", nameHint:"请按照与保险证相同的写法填写。",
+    kana:"假名(可留空)",
+    phone:"电话号码", phoneHint:"请填写您现在使用的号码。",
+    dob:"出生日期", submit:"提交申请", back:"← 返回语言选择",
+    doneTitle:"已收到您的申请",
+    doneMsg:"前台确认后将登记您的号码，请稍候。",
+    doneStep1:"请稍候，前台正在登记您的诊察券号码。",
+    doneStep2:"登记完成后，请点击下方按钮打开领取页面。",
+    doneStep3:"输入电话号码和出生日期即可领取电子诊察券。",
+    receiveBtn:"前往领取页面",
+    errReq:"请填写姓名、电话号码和出生日期。",
+    errNet:"通信失败，请在信号良好处重试。"
+  },
+  pt:{
+    pageTitle:"Solicitar Cartão de Paciente Digital",
+    intro:"Para pacientes já cadastrados receberem o cartão digital no celular. O telefone e a data de nascimento informados são usados para confirmar sua identidade ao receber o cartão.",
+    name:"Nome completo", nameHint:"Digite como está no seu cartão de seguro.",
+    kana:"Nome em kana (opcional)",
+    phone:"Telefone", phoneHint:"Informe o número que você usa agora.",
+    dob:"Data de nascimento", submit:"Enviar solicitação", back:"← Voltar à seleção de idioma",
+    doneTitle:"Sua solicitação foi recebida",
+    doneMsg:"A recepção vai verificar e registrar o seu número. Aguarde um momento.",
+    doneStep1:"Aguarde enquanto a recepção registra o número do seu cartão.",
+    doneStep2:"Após o registro, abra a página de recebimento no botão abaixo.",
+    doneStep3:"Digite seu telefone e data de nascimento para receber o cartão digital.",
+    receiveBtn:"Ir para a página de recebimento",
+    errReq:"Informe seu nome, telefone e data de nascimento.",
+    errNet:"Falha na conexão. Tente novamente com melhor sinal."
+  },
+  es:{
+    pageTitle:"Solicitar Tarjeta de Paciente Digital",
+    intro:"Para pacientes ya registrados que quieran recibir la tarjeta digital en su móvil. El teléfono y la fecha de nacimiento que indique se usan para verificar su identidad al recibir la tarjeta.",
+    name:"Nombre completo", nameHint:"Escríbalo como aparece en su tarjeta del seguro.",
+    kana:"Nombre en kana (opcional)",
+    phone:"Teléfono", phoneHint:"Indique el número que usa ahora.",
+    dob:"Fecha de nacimiento", submit:"Enviar solicitud", back:"← Volver a la selección de idioma",
+    doneTitle:"Hemos recibido su solicitud",
+    doneMsg:"Recepción lo comprobará y registrará su número. Espere un momento.",
+    doneStep1:"Espere mientras recepción registra el número de su tarjeta.",
+    doneStep2:"Cuando esté registrado, abra la página de recepción con el botón de abajo.",
+    doneStep3:"Introduzca su teléfono y fecha de nacimiento para recibir la tarjeta digital.",
+    receiveBtn:"Ir a la página de recepción",
+    errReq:"Indique su nombre, teléfono y fecha de nacimiento.",
+    errNet:"Fallo de conexión. Inténtelo de nuevo con mejor señal."
+  },
+  th:{
+    pageTitle:"ขอออกบัตรผู้ป่วยดิจิทัล",
+    intro:"สำหรับผู้ป่วยที่มีบัตรของคลินิกอยู่แล้ว เพื่อรับบัตรผู้ป่วยดิจิทัลบนมือถือ เบอร์โทรและวันเกิดที่กรอกจะใช้ยืนยันตัวตนตอนรับบัตร",
+    name:"ชื่อ-นามสกุล", nameHint:"กรุณากรอกตามที่ระบุในบัตรประกัน",
+    kana:"ชื่อแบบคานะ (ไม่บังคับ)",
+    phone:"เบอร์โทรศัพท์", phoneHint:"กรุณากรอกเบอร์ที่ใช้อยู่ตอนนี้",
+    dob:"วันเดือนปีเกิด", submit:"ส่งคำขอ", back:"← กลับไปเลือกภาษา",
+    doneTitle:"รับคำขอของท่านแล้ว",
+    doneMsg:"แผนกต้อนรับจะตรวจสอบและลงทะเบียนหมายเลขให้ กรุณารอสักครู่",
+    doneStep1:"กรุณารอสักครู่ ขณะที่แผนกต้อนรับลงทะเบียนหมายเลขบัตรของท่าน",
+    doneStep2:"เมื่อลงทะเบียนเสร็จ ให้เปิดหน้ารับบัตรด้วยปุ่มด้านล่าง",
+    doneStep3:"กรอกเบอร์โทรและวันเกิด เพื่อรับบัตรผู้ป่วยดิจิทัล",
+    receiveBtn:"ไปที่หน้ารับบัตร",
+    errReq:"กรุณากรอกชื่อ เบอร์โทร และวันเกิดให้ครบ",
+    errNet:"การเชื่อมต่อล้มเหลว กรุณาลองใหม่ในที่สัญญาณดี"
+  }
+};
+
+let LANG = "ja";
+const $ = id => document.getElementById(id);
+const t = k => (I18N[LANG] && I18N[LANG][k]) || I18N.ja[k] || k;
+
+const DOB_LABELS = {
+  ja:{yy:"年",mm:"月",dd:"日"}, en:{yy:"Year",mm:"Month",dd:"Day"},
+  zh:{yy:"年",mm:"月",dd:"日"}, pt:{yy:"Ano",mm:"Mês",dd:"Dia"},
+  es:{yy:"Año",mm:"Mes",dd:"Día"}, th:{yy:"ปี",mm:"เดือน",dd:"วัน"}
+};
+const dlab = k => (DOB_LABELS[LANG] || DOB_LABELS.ja)[k];
+
+function fillDobSelects(){
+  const y=$("dob-y"),m=$("dob-m"),d=$("dob-d");
+  const yPrev=y.value,mPrev=m.value,dPrev=d.value;
+  const mk=(sel,label)=>{sel.innerHTML="";const o=document.createElement("option");o.value="";o.textContent=label;o.disabled=true;o.selected=true;sel.append(o);};
+  mk(y,dlab("yy"));mk(m,dlab("mm"));mk(d,dlab("dd"));
+  const now=new Date().getFullYear();
+  for(let i=now;i>=now-110;i--){const o=document.createElement("option");o.value=i;o.textContent=i;y.append(o);}
+  for(let i=1;i<=12;i++){const o=document.createElement("option");o.value=String(i).padStart(2,"0");o.textContent=i;m.append(o);}
+  for(let i=1;i<=31;i++){const o=document.createElement("option");o.value=String(i).padStart(2,"0");o.textContent=i;d.append(o);}
+  if(yPrev)y.value=yPrev; if(mPrev)m.value=mPrev; if(dPrev)d.value=dPrev;
+}
+function getDob(){
+  const y=$("dob-y").value,m=$("dob-m").value,d=$("dob-d").value;
+  if(!y||!m||!d) return "";
+  return `${y}-${m}-${d}`;
+}
+
+function applyI18n(){
+  document.documentElement.lang = LANG;
+  document.querySelectorAll("[data-t]").forEach(el=>{ el.textContent = t(el.dataset.t); });
+  $("done-msg").textContent = t("doneMsg");
+  fillDobSelects();
+}
+function show(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  $(id).classList.add("active");
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+function showErr(msg){ const e=$("form-err"); e.textContent=msg; e.style.display="block"; window.scrollTo({top:0,behavior:"smooth"}); }
+function clearErr(){ $("form-err").style.display="none"; }
+
+document.querySelectorAll(".lang-btn").forEach(b=>b.addEventListener("click",()=>{
+  LANG=b.dataset.lang; applyI18n(); show("scr-form");
+}));
+$("btn-back").addEventListener("click",()=>show("scr-lang"));
+$("btn-receive").addEventListener("click",()=>{ window.location.href = RECEIVE_URL; });
+
+async function submit(){
+  clearErr();
+  const name=$("name").value.trim();
+  const kana=$("kana").value.trim();
+  const phone=$("phone").value.trim();
+  const dob=getDob();
+  if(!name || !phone || !dob){ showErr(t("errReq")); return; }
+  const btn=$("btn-submit"); btn.disabled=true; btn.innerHTML='<span class="spinner"></span>'+t("submit");
+  try{
+    const r = await fetch(SUBMIT_API+"/submit",{
+      method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({ kind:"card", lang:LANG, name, kana, phone, dob })
+    });
+    const data = await r.json().catch(()=>({}));
+    if(r.ok && data.ok){ show("scr-done"); return; }
+    showErr(t("errNet"));
+  }catch(e){ showErr(t("errNet")); }
+  finally{ btn.disabled=false; btn.innerHTML='<span>'+t("submit")+'</span>'; }
+}
+$("btn-submit").addEventListener("click",submit);
+
+applyI18n();
+</script>
+</body>
+</html>

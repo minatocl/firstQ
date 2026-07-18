@@ -70,6 +70,12 @@ pre{background:#fff;border:1.5px solid var(--line);border-radius:10px;padding:12
 .card.is-new{animation:glow 2.6s ease}
 .card.is-new .code::after{content:"NEW";font-size:10px;font-style:normal;font-weight:800;background:var(--mint);color:#fff;border-radius:5px;padding:2px 6px;margin-left:8px;vertical-align:middle;letter-spacing:.08em}
 @keyframes glow{0%{box-shadow:0 0 0 3px var(--mint)}100%{box-shadow:0 2px 8px rgba(34,134,165,.08)}}
+
+/* 電子診察券発行希望(既存患者のオンサイト申し込み) */
+.card.kind-card{border-left:5px solid #5B4FB0}
+.tag-card{background:#5B4FB0;color:#fff;font-size:11px;font-weight:800;border-radius:6px;padding:4px 9px;letter-spacing:.02em;white-space:nowrap;line-height:1.35;text-align:center}
+.meta .kana{font-weight:600;color:#4A6B78}
+
 .empty{text-align:center;padding:60px 20px;color:#7A93A0}
 .empty .icon{font-size:40px;margin-bottom:10px}
 
@@ -395,10 +401,11 @@ function render(list){
   }
   list.sort((a,b)=>a.createdAt<b.createdAt?1:-1);
   list.forEach(e=>{
+    const isCard = e.kind === "card"; // 電子診察券発行希望(既存患者)
     const card=document.createElement("div");
-    card.className="card"+(fresh.some(f=>f.code===e.code)&&!FIRST?" is-new":"");
+    card.className="card"+(fresh.some(f=>f.code===e.code)&&!FIRST?" is-new":"")+(isCard?" kind-card":"");
     const time=new Date(e.createdAt).toLocaleTimeString("ja-JP",{hour:"2-digit",minute:"2-digit"});
-    const clin=clinicalText(e);
+    const clin=isCard?"":clinicalText(e); // 発行希望は症状等を持たないため算出しない
     const cs = CARD_STATUS[e.code];
     const stKey = cs && cs.status;
     const stBadge = stKey
@@ -413,14 +420,28 @@ function render(list){
           </div>
           <div class="issue-note">氏名・電話・生年月日は問診データから自動送信。番号は枝番なしの数字(古い患者は3〜4桁のまま。頭に0を付けて入力しても保存時に外れます)。<b>Dynamicsで患者の行をコピー(Ctrl+C)してこの欄に貼り付けると、番号だけが自動で入ります。</b>番号を変えて再発行すると旧番号は無効になります。</div>
         </div>`;
-    card.innerHTML = `
-      <div class="card-head">
-        <div class="code">${esc(e.code)}</div>
-        <div class="meta"><b>${esc(e.name||"(氏名未入力)")}</b><br>${time} 送信 / ${fmtDob(e.dob)} (${ageFrom(e.dob)})</div>
-        <span class="lang-tag">${JA.langName[e.lang]||e.lang}</span>
-        <span class="chev">›</span>
-      </div>
-      <div class="card-body">
+    const metaName = isCard && e.kana
+      ? `<b>${esc(e.name||"(氏名未入力)")}</b> <span class="kana">(${esc(e.kana)})</span>`
+      : `<b>${esc(e.name||"(氏名未入力)")}</b>`;
+    // 電子診察券発行希望の行: 臨床項目(症状・住所・診察情報)は表示せず、
+    // 本人確認と発行に必要な 氏名/フリガナ/電話/生年月日 + 発行ボックスのみ。
+    const cardKindBody = `
+        <div class="dob-line">生年月日: <b>${fmtDob(e.dob)}</b> (${ageFrom(e.dob)})</div>
+        <div class="copy-block">
+          <div class="copy-label"><span>氏名</span><button class="btn-copy" data-copy="name">コピー</button></div>
+          <pre data-text="name">${esc(e.name||"(未入力)")}</pre>
+        </div>
+        ${e.kana ? `<div class="copy-block">
+          <div class="copy-label"><span>フリガナ</span><button class="btn-copy" data-copy="kana">コピー</button></div>
+          <pre data-text="kana">${esc(e.kana)}</pre>
+        </div>` : ""}
+        <div class="copy-block">
+          <div class="copy-label"><span>電話番号(受け取りの本人確認に使用)</span><button class="btn-copy" data-copy="phone">コピー</button></div>
+          <pre data-text="phone">${esc(e.phone||"(未入力)")}</pre>
+        </div>
+        ${issueBlock}
+        <button class="btn-del">確認済み → 削除</button>`;
+    const monshinBody = `
         <div class="dob-line">生年月日: <b>${fmtDob(e.dob)}</b> (${ageFrom(e.dob)}) → カルテ表紙へ手入力</div>
         <div class="copy-block">
           <div class="copy-label"><span>氏名(カルテ表紙へ)</span><button class="btn-copy" data-copy="name">コピー</button></div>
@@ -440,14 +461,22 @@ function render(list){
           <pre data-text="clin">${esc(clin)}</pre>
         </div>
         ${issueBlock}
-        <button class="btn-del">確認済み → 削除</button>
-      </div>`;
+        <button class="btn-del">確認済み → 削除</button>`;
+    card.innerHTML = `
+      <div class="card-head">
+        ${isCard ? `<span class="tag-card">電子診察券<br>発行希望</span>` : ""}
+        <div class="code">${esc(e.code)}</div>
+        <div class="meta">${metaName}<br>${time} 送信 / ${fmtDob(e.dob)} (${ageFrom(e.dob)})</div>
+        <span class="lang-tag">${JA.langName[e.lang]||e.lang}</span>
+        <span class="chev">›</span>
+      </div>
+      <div class="card-body">${isCard ? cardKindBody : monshinBody}</div>`;
     card.querySelector(".card-head").addEventListener("click",()=>card.classList.toggle("open"));
     card.querySelectorAll(".btn-copy").forEach(btn=>{
       btn.addEventListener("click",async ev=>{
         ev.stopPropagation();
         const key=btn.dataset.copy;
-        const text = key==="addr" ? fullAddr(e) : key==="phone" ? (e.phone||"") : key==="name" ? (e.name||"") : clin;
+        const text = key==="addr" ? fullAddr(e) : key==="phone" ? (e.phone||"") : key==="name" ? (e.name||"") : key==="kana" ? (e.kana||"") : clin;
         try{ await navigator.clipboard.writeText(text); }
         catch(_){ /* http環境用フォールバック */ 
           const ta=document.createElement("textarea");ta.value=text;document.body.append(ta);ta.select();document.execCommand("copy");ta.remove();
@@ -574,7 +603,9 @@ function startDemo(){
     {code:"A46", name:"MINATO TARO", dob:"1978-11-02", phone:"080-9876-5432", lang:"en",
      symptoms:["headache"], reasonFree:"", history:["hypertension"], historyFree:"",
      allergy:["drug"], allergyFree:"ペニシリン", zip:"", jpAddress:"", address:"Naka-ku, Yokohama",
-     createdAt:new Date(now-9e5).toISOString(), weight:""}
+     createdAt:new Date(now-9e5).toISOString(), weight:""},
+    {code:"7204", kind:"card", name:"港 一郎", kana:"ミナト イチロウ", dob:"1948-03-20",
+     phone:"090-2222-3333", lang:"ja", createdAt:new Date(now-6e5).toISOString()}
   ]);
   $("count").textContent = "デモ表示(本番データではありません)";
 }
