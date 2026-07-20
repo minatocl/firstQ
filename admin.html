@@ -43,6 +43,20 @@ button{font-family:inherit;cursor:pointer}
 .mi-ok{color:#1E7B4F;font-size:13.5px;font-weight:700;margin-top:10px}
 .count{font-size:14px;color:#4A6B78;font-weight:600}
 .btn-refresh{background:#fff;border:1.5px solid var(--line);color:var(--teal);border-radius:10px;padding:8px 16px;font-size:13.5px;font-weight:700}
+/* 種別タブ(新患 / 電子診察券発行希望 の切り替え) */
+.tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.tab{background:#fff;border:1.5px solid var(--line);color:#5B7E8C;border-radius:999px;padding:9px 16px;font-size:14px;font-weight:800;font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:.12s}
+.tab:active{transform:scale(.97)}
+.tab .tab-n{background:#EDF3F6;color:#5B7E8C;border-radius:999px;padding:1px 8px;font-size:12px;font-weight:800;min-width:22px;text-align:center}
+.tab[data-filter="all"].active{background:var(--teal);border-color:var(--teal);color:#fff}
+.tab[data-filter="all"].active .tab-n{background:rgba(255,255,255,.28);color:#fff}
+.tab[data-filter="monshin"]{color:var(--teal-dark);border-color:#BFE0EC}
+.tab[data-filter="monshin"].active{background:var(--teal);border-color:var(--teal);color:#fff}
+.tab[data-filter="monshin"].active .tab-n{background:rgba(255,255,255,.28);color:#fff}
+.tab[data-filter="card"]{color:#5B4FB0;border-color:#D6CFF0}
+.tab[data-filter="card"] .tab-n{background:#EFEAFB;color:#5B4FB0}
+.tab[data-filter="card"].active{background:#5B4FB0;border-color:#5B4FB0;color:#fff}
+.tab[data-filter="card"].active .tab-n{background:rgba(255,255,255,.28);color:#fff}
 .cards{display:grid;gap:14px}
 .card{background:var(--card);border-radius:var(--radius);box-shadow:0 2px 8px rgba(34,134,165,.08);overflow:hidden}
 .card-head{display:flex;align-items:center;gap:14px;padding:14px 18px;cursor:pointer;user-select:none}
@@ -168,6 +182,12 @@ pre{background:#fff;border:1.5px solid var(--line);border-radius:10px;padding:12
       </div>
     </div>
 
+    <div class="tabs" id="tabs">
+      <button class="tab active" data-filter="all">すべて <span class="tab-n" id="tabn-all">0</span></button>
+      <button class="tab" data-filter="monshin">新患 <span class="tab-n" id="tabn-monshin">0</span></button>
+      <button class="tab" data-filter="card">電子診察券発行希望 <span class="tab-n" id="tabn-card">0</span></button>
+    </div>
+
     <div class="cards" id="cards"></div>
   </div>
 </div>
@@ -210,6 +230,8 @@ langName:{ja:"日本語",en:"English",zh:"中文",pt:"Português",th:"ไทย"
 };
 const $=id=>document.getElementById(id);
 let SEEN = new Set(), FIRST = true;
+let FILTER = "all";        // すべて / monshin(新患) / card(電子診察券発行希望)
+let LAST_ITEMS = [];       // 直近の一覧(タブ切替時に再取得せず描画するため)
 function chime(){
   try{
     const a=new (window.AudioContext||window.webkitAudioContext)();
@@ -388,19 +410,34 @@ function clinicalText(e){
 }
 
 function render(list){
+  LAST_ITEMS = list;
   const c=$("cards"); c.innerHTML="";
-  $("count").textContent = `未確認 ${list.length} 件`;
-  document.title = list.length ? `(${list.length}) 問診受付パネル` : "問診受付パネル";
+  // 種別カウント(タブのバッジ)。card=電子診察券発行希望 / それ以外=新患
+  const nCard = list.filter(e=>e.kind==="card").length;
+  const nMon = list.length - nCard;
+  $("tabn-all").textContent = list.length;
+  $("tabn-monshin").textContent = nMon;
+  $("tabn-card").textContent = nCard;
+  // 新着チャイム・既読管理は全件で判定(絞り込み中でも新着を逃さない)
   const fresh = list.filter(e=>!SEEN.has(e.code));
   if(!FIRST && fresh.length>0) chime();
   list.forEach(e=>SEEN.add(e.code));
-  if(list.length===0){
-    c.innerHTML = `<div class="empty"><div class="icon">🌊</div>新しい問診はありません</div>`;
+  // タブで表示を絞り込む
+  const view = FILTER==="card" ? list.filter(e=>e.kind==="card")
+             : FILTER==="monshin" ? list.filter(e=>e.kind!=="card")
+             : list;
+  $("count").textContent = `未確認 ${view.length} 件` + (FILTER!=="all" ? `（全${list.length}）` : "");
+  document.title = list.length ? `(${list.length}) 問診受付パネル` : "問診受付パネル";
+  if(view.length===0){
+    const msg = list.length===0 ? "新しい問診はありません"
+      : FILTER==="card" ? "電子診察券の発行希望はありません"
+      : "新患の問診はありません";
+    c.innerHTML = `<div class="empty"><div class="icon">🌊</div>${msg}</div>`;
     FIRST=false;
     return;
   }
-  list.sort((a,b)=>a.createdAt<b.createdAt?1:-1);
-  list.forEach(e=>{
+  view.sort((a,b)=>a.createdAt<b.createdAt?1:-1);
+  view.forEach(e=>{
     const isCard = e.kind === "card"; // 電子診察券発行希望(既存患者)
     const card=document.createElement("div");
     card.className="card"+(fresh.some(f=>f.code===e.code)&&!FIRST?" is-new":"")+(isCard?" kind-card":"");
@@ -542,6 +579,13 @@ $("btn-login").addEventListener("click",()=>{
 });
 $("pass").addEventListener("keydown",e=>{if(e.key==="Enter")$("btn-login").click();});
 $("btn-refresh").addEventListener("click",load);
+
+// 種別タブ: 再取得せず直近データを絞り込んで描画(APIを叩かない)
+document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>{
+  FILTER = t.dataset.filter;
+  document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active", x===t));
+  render(LAST_ITEMS);
+}));
 
 /* ---- 手動発行(問診なしの既存患者) ---- */
 $("btn-manual").addEventListener("click",()=>{
