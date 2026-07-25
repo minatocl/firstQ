@@ -395,6 +395,11 @@ function fullAddr(e){
   }
   return e.address || "(未入力)";
 }
+/* 郵便番号を 123-4567 形式に(コピー用。〒記号は付けない) */
+function zipFmt(e){
+  const z=(e.zip||"").replace(/[^0-9]/g,"");
+  return z.length>=4 ? `${z.slice(0,3)}-${z.slice(3)}` : (z||"(未入力)");
+}
 function esc(s){const d=document.createElement("div");d.textContent=s||"";return d.innerHTML;}
 
 /* 診察情報まとめテキスト(Dynamicsの診察ページに貼る) */
@@ -485,9 +490,17 @@ function render(list){
           <pre data-text="name">${esc(e.name||"(未入力)")}</pre>
         </div>
         <div class="copy-block">
-          <div class="copy-label"><span>住所(カルテ表紙へ)</span><button class="btn-copy" data-copy="addr">コピー</button></div>
-          <pre data-text="addr">${esc(fullAddr(e))}</pre>
-          ${e.lang!=="ja" ? `<p class="foreign-note">※ 患者記入の原文です(${JA.langName[e.lang]})。保険証と表記の確認を。</p>`:""}
+          <div class="copy-label"><span>① 郵便番号</span><button class="btn-copy" data-copy="zip">コピー</button></div>
+          <pre data-text="zip">${esc(zipFmt(e))}</pre>
+        </div>
+        <div class="copy-block">
+          <div class="copy-label"><span>② 住所(郵便番号から自動)</span><button class="btn-copy" data-copy="jpaddr">コピー</button></div>
+          <pre data-text="jpaddr">${esc(e.jpAddress||"(未入力)")}</pre>
+        </div>
+        <div class="copy-block">
+          <div class="copy-label"><span>③ 番地・建物名・部屋番号</span><button class="btn-copy" data-copy="addr2">コピー</button></div>
+          <pre data-text="addr2">${esc(e.address||"(未入力)")}</pre>
+          ${e.lang!=="ja" ? `<p class="foreign-note">※ ③は患者記入の原文です(${JA.langName[e.lang]})。保険証と表記の確認を。</p>`:""}
         </div>
         <div class="copy-block">
           <div class="copy-label"><span>電話番号(カルテ表紙へ)</span><button class="btn-copy" data-copy="phone">コピー</button></div>
@@ -513,7 +526,14 @@ function render(list){
       btn.addEventListener("click",async ev=>{
         ev.stopPropagation();
         const key=btn.dataset.copy;
-        const text = key==="addr" ? fullAddr(e) : key==="phone" ? (e.phone||"") : key==="name" ? (e.name||"") : key==="kana" ? (e.kana||"") : clin;
+        const text = key==="addr" ? fullAddr(e)
+          : key==="zip" ? zipFmt(e)
+          : key==="jpaddr" ? (e.jpAddress||"")
+          : key==="addr2" ? (e.address||"")
+          : key==="phone" ? (e.phone||"")
+          : key==="name" ? (e.name||"")
+          : key==="kana" ? (e.kana||"")
+          : clin;
         try{ await navigator.clipboard.writeText(text); }
         catch(_){ /* http環境用フォールバック */ 
           const ta=document.createElement("textarea");ta.value=text;document.body.append(ta);ta.select();document.execCommand("copy");ta.remove();
