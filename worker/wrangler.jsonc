@@ -22,7 +22,7 @@
     // 照合レート制限: 試行回数/時
     "RATE_LIMIT_PER_HOUR": "5",
     // CORS 許可オリジン(カンマ区切り)。GitHub Pages と受付端末の想定。
-    "ALLOWED_ORIGINS": "https://minatocl.github.io"
+    "ALLOWED_ORIGINS": "https://minatocl.github.io,http://192.168.1.11:8787"
   },
 
   // --- KV: カード発行レコード / トークン / レート制限 ---

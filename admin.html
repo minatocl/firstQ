@@ -32,6 +32,15 @@ button{font-family:inherit;cursor:pointer}
 
 /* list */
 .toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.btn-manual{background:var(--teal);color:#fff;border:none;border-radius:10px;padding:8px 16px;font-size:13.5px;font-weight:700;margin-right:8px;cursor:pointer}
+.manual-panel{background:var(--card);border-radius:var(--radius);box-shadow:0 2px 8px rgba(34,134,165,.08);padding:18px;margin-bottom:14px}
+.mi-title{font-size:15px;font-weight:800;color:var(--teal-dark);margin-bottom:6px}
+.mi-sub{font-size:12.5px;color:#5B7E8C;margin-bottom:12px;line-height:1.6}
+.mi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;margin-bottom:12px}
+.mi-grid label{font-size:12.5px;font-weight:700;color:var(--teal)}
+.mi-grid input,.mi-grid select{width:100%;border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;font-size:15px;font-family:inherit;background:#F7FCFE;margin-top:4px}
+.mi-grid input:focus,.mi-grid select:focus{outline:none;border-color:var(--teal);background:#fff}
+.mi-ok{color:#1E7B4F;font-size:13.5px;font-weight:700;margin-top:10px}
 .count{font-size:14px;color:#4A6B78;font-weight:600}
 .btn-refresh{background:#fff;border:1.5px solid var(--line);color:var(--teal);border-radius:10px;padding:8px 16px;font-size:13.5px;font-weight:700}
 .cards{display:grid;gap:14px}
@@ -117,8 +126,42 @@ pre{background:#fff;border:1.5px solid var(--line);border-radius:10px;padding:12
   <div id="panel">
     <div class="toolbar">
       <span class="count" id="count"></span>
-      <button class="btn-refresh" id="btn-refresh">↺ 更新</button>
+      <span>
+        <button class="btn-manual" id="btn-manual">＋ 手動発行</button>
+        <button class="btn-refresh" id="btn-refresh">↺ 更新</button>
+      </span>
     </div>
+
+    <!-- 問診なしの既存患者への手動発行 -->
+    <div class="manual-panel" id="manual-issue" style="display:none">
+      <div class="mi-title">診察券の手動発行(問診なしの既存患者用)</div>
+      <p class="mi-sub">
+        紙の診察券はあるが電子版がない患者さん用。カルテを見ながら入力してください。
+        電話番号と生年月日は、患者さんがスマホで診察券を受け取るときの本人確認に使われます。
+        言語が日本語以外の場合、氏名は<b>その言語の表記</b>で入力してください(券面と呼び出しアナウンスの両方に使われます)。
+      </p>
+      <div class="card-issue">
+        <div class="mi-grid">
+          <label>カルテ番号(枝番なし・古い番号は3〜4桁OK)<input id="mi-chart" inputmode="numeric" maxlength="5" placeholder="48950(Dynamicsの行貼り付けOK)"></label>
+          <label>氏名(券面表示)<input id="mi-name" placeholder="港 太郎"></label>
+          <label>電話番号<input id="mi-phone" inputmode="tel" placeholder="090-1234-5678"></label>
+          <label>生年月日<input id="mi-dob" type="date"></label>
+          <label>言語<select id="mi-lang">
+            <option value="ja" selected>日本語</option>
+            <option value="en">English(英語)</option>
+            <option value="zh">中文(中国語)</option>
+            <option value="pt">Português(ポルトガル語)</option>
+            <option value="th">ไทย(タイ語)</option>
+            <option value="es">Español(スペイン語)</option>
+          </select></label>
+        </div>
+        <button class="btn btn-primary" id="mi-issue">発行する</button>
+        <p class="err" id="mi-err"></p>
+        <p class="mi-ok" id="mi-ok" style="display:none"></p>
+        <div class="issue-note"></div>
+      </div>
+    </div>
+
     <div class="cards" id="cards"></div>
   </div>
 </div>
@@ -144,6 +187,13 @@ const WORKER_URL = "https://minato-monshin.minato-monshin.workers.dev"; // ← C
    動作確認時は ?cardapi=http://127.0.0.1:8787 で上書き可能。 */
 const CARD_API = new URLSearchParams(location.search).get("cardapi")
   || "https://minato-card.minato-monshin.workers.dev";
+/* 患者呼び出しシステム(minato-call、待合室PCのLANサーバー)。
+   診察券発行時に、日本語以外の患者の呼び出しアナウンス言語を自動登録する。
+   ?callapi=... で上書き可能。?callapi= (空)で無効化。 */
+const CALL_SERVER = new URLSearchParams(location.search).get("callapi")
+  ?? "http://192.168.1.11:8787";
+/* firstQの言語コード → 呼び出しシステムの言語コード */
+const CALL_LANG_MAP = { zh: "zh-CN" };
 /* ========================================== */
 
 const JA = {
@@ -223,12 +273,79 @@ async function doIssue(entry, chartNo, ui){
       stEl.textContent=ST_LABEL[d.status]||d.status;
       stEl.className="card-status "+(ST_CLASS[d.status]||"");
       issueBtn.textContent="再発行"; issueBtn.classList.add("reissue");
+      registerCallLang(entry, d.chartNo, issueBtn); // 呼び出しアナウンス言語の自動登録(非同期・失敗しても発行は成立)
     } else {
       issueBtn.textContent=orig;
       alert("発行に失敗しました: "+(d.error==="invalid_chartNo"?"カルテ番号は数字5桁で入力してください":(d.error||"")));
     }
   }catch(err){ issueBtn.textContent=orig; alert("通信エラー。カードWorkerのURL設定をご確認ください。"); }
   finally{ issueBtn.disabled=false; }
+}
+
+/* カルテ番号の正規化: 数字以外を除去し、頭の0を外す(古い患者は3〜4桁。
+   0埋め5桁で入力されても、保存・QRは本来の桁数にする) */
+function normalizeChartNo(s){
+  return String(s || "").replace(/\D/g, "").replace(/^0+(?=\d)/, "");
+}
+
+/* Dynamicsからのコピー貼り付けをカルテ番号(5桁)に変換する。
+   対応: ①5桁そのまま ②受付一覧の行コピー(ヘッダー付きタブ区切り) ③「489500.00」形式の単独値
+   カルテ番号フィールドは「5桁カルテ番号+枝番1桁.小数部」なので、小数部除去→末尾1桁(枝番)を捨てる */
+function extractChartNo(text){
+  if(!text) return null;
+  const t = text.trim();
+  if(/^\d{1,5}$/.test(t)) return normalizeChartNo(t);
+  const lines = t.split(/\r?\n/);
+  const hi = lines.findIndex(l => l.includes("カルテ番号"));
+  if(hi >= 0){
+    const cols = lines[hi].split("\t").map(s => s.trim());
+    const ci = cols.indexOf("カルテ番号");
+    if(ci >= 0){
+      for(let i = hi + 1; i < lines.length; i++){
+        if(!lines[i].trim()) continue;
+        const raw = (lines[i].split("\t")[ci] || "").trim();
+        const m = raw.match(/^(\d{2,10})(?:\.\d+)?$/);
+        return m ? normalizeChartNo(m[1].slice(0, -1)) : null;
+      }
+    }
+    return null;
+  }
+  const m = t.match(/(\d{2,10})\.\d+/); // 「489500.00」形式(古い患者は「1230.00」など短い)
+  return m ? normalizeChartNo(m[1].slice(0, -1)) : null;
+}
+
+/* カルテ番号入力欄: Dynamicsの行をそのまま貼り付けても番号だけ入るようにする */
+function attachChartPaste(input){
+  input.addEventListener("paste",(e)=>{
+    const text = (e.clipboardData || window.clipboardData).getData("text");
+    const no = extractChartNo(text);
+    if(no){
+      e.preventDefault();
+      input.value = no;
+      input.style.borderColor = "#2BB59A";
+      setTimeout(()=>{ input.style.borderColor = ""; }, 1500);
+    }
+  });
+}
+
+/* 患者呼び出しシステムへ言語を登録(待合室で呼ばれるとき、その言語でもアナウンスされる) */
+async function registerCallLang(entry, chartNo, issueBtn){
+  const lang = entry.lang || "ja";
+  if(!CALL_SERVER || lang === "ja") return; // 日本語の患者は登録不要(既定で日本語)
+  const note = issueBtn.closest(".card-issue")?.querySelector(".issue-note");
+  try{
+    const r = await fetch(CALL_SERVER + "/exceptions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ karte: chartNo, ttsName: entry.name || "", lang: CALL_LANG_MAP[lang] || lang })
+    });
+    const d = await r.json();
+    if(note) note.textContent = d.ok
+      ? `✓ 呼び出しアナウンス言語(${JA.langName[lang]||lang})を待合室に登録しました`
+      : `⚠ 呼び出し言語を登録できませんでした: ${d.error||""}`;
+  }catch(_){
+    if(note) note.textContent = "⚠ 待合室の呼び出しサーバーに接続できず、言語を登録できませんでした(診察券の発行は完了しています)";
+  }
 }
 
 function fmtDob(iso){
@@ -294,7 +411,7 @@ function render(list){
             <input class="chartno-input" inputmode="numeric" maxlength="5" placeholder="カルテ番号(5桁)" value="${cs?esc(cs.chartNo):''}">
             <button class="btn-issue ${cs?'reissue':''}">${cs?'再発行':'発行'}</button>
           </div>
-          <div class="issue-note">氏名・電話・生年月日は問診データから自動送信。番号は数字5桁ちょうど(枝番なし)。番号を変えて再発行すると旧番号は無効になります。</div>
+          <div class="issue-note">氏名・電話・生年月日は問診データから自動送信。番号は枝番なしの数字(古い患者は3〜4桁のまま。頭に0を付けて入力しても保存時に外れます)。<b>Dynamicsで患者の行をコピー(Ctrl+C)してこの欄に貼り付けると、番号だけが自動で入ります。</b>番号を変えて再発行すると旧番号は無効になります。</div>
         </div>`;
     card.innerHTML = `
       <div class="card-head">
@@ -341,11 +458,12 @@ function render(list){
     });
     const issueBtn=card.querySelector(".btn-issue");
     const chartInput=card.querySelector(".chartno-input");
+    attachChartPaste(chartInput);
     const stEl=card.querySelector(".card-status");
     issueBtn.addEventListener("click",()=>{
-      const chartNo=(chartInput.value||"").replace(/[^0-9]/g,"");
+      const chartNo=normalizeChartNo(chartInput.value);
       chartInput.value=chartNo;
-      if(!/^\d{5}$/.test(chartNo)){ chartInput.focus(); chartInput.style.borderColor="#B03A3A"; return; }
+      if(!/^\d{1,5}$/.test(chartNo)){ chartInput.focus(); chartInput.style.borderColor="#B03A3A"; return; }
       chartInput.style.borderColor="";
       openIssueConfirm(e, chartNo, {issueBtn, chartInput, stEl});
     });
@@ -370,6 +488,11 @@ async function load(){
   try{
     const d = await api("/list");
     const items = d.items||[];
+    if($("panel").style.display!=="block"){
+      // ログイン直後は診察券の発行状態を待たずにまず一覧を表示する
+      render(items);
+      $("login").style.display="none"; $("panel").style.display="block";
+    }
     await loadCardStatuses(items.map(e=>e.code));
     render(items);
     $("login").style.display="none"; $("panel").style.display="block";
@@ -390,6 +513,46 @@ $("btn-login").addEventListener("click",()=>{
 });
 $("pass").addEventListener("keydown",e=>{if(e.key==="Enter")$("btn-login").click();});
 $("btn-refresh").addEventListener("click",load);
+
+/* ---- 手動発行(問診なしの既存患者) ---- */
+$("btn-manual").addEventListener("click",()=>{
+  const p=$("manual-issue");
+  const open=p.style.display!=="none";
+  p.style.display=open?"none":"block";
+  $("btn-manual").textContent=open?"＋ 手動発行":"× 閉じる";
+});
+attachChartPaste($("mi-chart"));
+$("mi-issue").addEventListener("click", async ()=>{
+  const chartNo=normalizeChartNo($("mi-chart").value);
+  $("mi-chart").value=chartNo;
+  const name=$("mi-name").value.trim();
+  const phone=$("mi-phone").value.trim();
+  const dob=$("mi-dob").value; // YYYY-MM-DD
+  const lang=$("mi-lang").value;
+  const err=$("mi-err"), ok=$("mi-ok");
+  err.style.display="none"; ok.style.display="none";
+  if(!/^\d{1,5}$/.test(chartNo)){ err.textContent="カルテ番号は数字で入力してください(最大5桁・枝番なし。古い番号は3〜4桁のままでも頭に0を付けてもOK)"; err.style.display="block"; return; }
+  if(!name||!phone||!dob){ err.textContent="氏名・電話番号・生年月日をすべて入力してください"; err.style.display="block"; return; }
+  const btn=$("mi-issue"); btn.disabled=true; btn.textContent="…";
+  try{
+    // code は「manual-カルテ番号」の固有値。問診由来のコードと衝突せず、
+    // 同じ患者への再発行は上書きとして扱われる。
+    const d=await cardApi("/api/card/issue",{method:"POST",body:JSON.stringify({
+      code:"manual-"+chartNo, chartNo, name, phone, dob, lang
+    })});
+    if(d.ok){
+      ok.textContent=`✓ カルテ番号 ${chartNo}(${name})の診察券を発行しました。患者さんは案内QRから電話番号+生年月日の確認で受け取れます。`;
+      ok.style.display="block";
+      registerCallLang({lang, name}, chartNo, btn); // 日本語以外なら呼び出し言語も自動登録
+      ["mi-chart","mi-name","mi-phone"].forEach(id=>$(id).value="");
+      $("mi-dob").value=""; $("mi-lang").value="ja";
+    }else{
+      err.textContent="発行に失敗しました: "+(d.error==="invalid_chartNo"?"カルテ番号は数字5桁で入力してください":(d.error||""));
+      err.style.display="block";
+    }
+  }catch(_){ err.textContent="通信エラー。ネットワークをご確認ください。"; err.style.display="block"; }
+  finally{ btn.disabled=false; btn.textContent="発行する"; }
+});
 setInterval(()=>{ if($("panel").style.display==="block" && !DEMO) load(); },30000);
 
 /* デモモード: ?demo=1 でログインなしにサンプル患者で発行UIを確認できる。
